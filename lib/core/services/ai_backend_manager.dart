@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class AIBackendManager {
-  // Local development URL for emulator
-  static const String _localUrl = 'http://192.168.1.172:5000'; // Android emulator localhost
+  // Local development URL for WiFi network
+  static const String _localUrl = 'http://10.64.139.146:5000'; // Local WiFi IP address
   
 
   // Cloud deployment URL (update this when you deploy to Railway)
