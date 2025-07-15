@@ -4,16 +4,16 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class AIBackendManager {
-  // Your computer's IP address with HTTP server port
-  static const String _localUrl = 'http://192.168.1.172:8080';
+  // For Android emulator (10.0.2.2 maps to host localhost)
+  static const String _localUrl = 'http://10.0.2.2:8080';
   
-  // Cloud deployment URL (update this when you deploy to Railway)
+  // Cloud deployment URL
   static const String _cloudUrl = 'https://your-ai-backend.railway.app';
   
   // Use local URL for development, cloud URL for production
   static String get _baseUrl {
     if (kDebugMode) {
-      return _localUrl; // Use your IP with port 8010
+      return _localUrl; // Use emulator URL in debug mode
     } else {
       return _cloudUrl; // Use cloud URL in release mode
     }
