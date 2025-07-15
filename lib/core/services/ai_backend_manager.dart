@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class AIBackendManager {
-  // External URL accessible from Android device
-  static const String _localUrl = 'https://demobackend.emergentagent.com';
+  // Your computer's IP address for Android device access
+  static const String _localUrl = 'http://192.168.1.172:8001';
   
   // Cloud deployment URL (update this when you deploy to Railway)
   static const String _cloudUrl = 'https://your-ai-backend.railway.app';
@@ -13,7 +13,7 @@ class AIBackendManager {
   // Use local URL for development, cloud URL for production
   static String get _baseUrl {
     if (kDebugMode) {
-      return _localUrl; // Use external URL in debug mode
+      return _localUrl; // Use your IP in debug mode
     } else {
       return _cloudUrl; // Use cloud URL in release mode
     }
