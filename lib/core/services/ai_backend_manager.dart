@@ -6,9 +6,11 @@ import 'package:flutter/foundation.dart';
 class AIBackendManager {
   // Local development URL - automatically detects environment
   static String get _localUrl {
-    // For Android emulator, use 10.0.2.2
-    // For physical device, use actual IP
-    return 'http://10.64.139.146:5000'; // Current WiFi IP
+    // For Android emulator, use 10.0.2.2 (emulator's special IP)
+    // For physical device, use actual network IP
+    // You can change this based on your testing needs
+    return 'http://10.64.139.146:5000'; // Current WiFi IP for physical device
+    // return 'http://10.0.2.2:5000'; // Uncomment for Android emulator
   }
   
 
