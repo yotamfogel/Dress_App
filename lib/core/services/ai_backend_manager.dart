@@ -4,30 +4,23 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class AIBackendManager {
-  // Local development URL - automatically detects environment
-  static String get _localUrl {
-    // For Android emulator, use 10.0.2.2 (emulator's special IP)
-    // For physical device, use actual network IP
-    // You can change this based on your testing needs
-    return 'http://10.64.139.146:5000'; // Current WiFi IP for physical device
-    // return 'http://10.0.2.2:5000'; // Uncomment for Android emulator
-  }
+  // External URL accessible from Android device
+  static const String _localUrl = 'https://demobackend.emergentagent.com';
   
-
   // Cloud deployment URL (update this when you deploy to Railway)
   static const String _cloudUrl = 'https://your-ai-backend.railway.app';
   
   // Use local URL for development, cloud URL for production
   static String get _baseUrl {
     if (kDebugMode) {
-      return _localUrl; // Use localhost in debug mode
+      return _localUrl; // Use external URL in debug mode
     } else {
       return _cloudUrl; // Use cloud URL in release mode
     }
   }
   
   // Health check endpoint
-  static const String _healthEndpoint = '/health';
+  static const String _healthEndpoint = '/api/health';
   
   // Clothing detection endpoint
   static const String _detectEndpoint = '/detect-clothing';
