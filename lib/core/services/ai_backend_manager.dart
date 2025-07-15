@@ -23,10 +23,10 @@ class AIBackendManager {
   static const String _healthEndpoint = '/api/health';
   
   // Clothing detection endpoint
-  static const String _detectEndpoint = '/detect-clothing';
+  static const String _detectEndpoint = '/api/detect-clothing';
   
   // Color analysis endpoint
-  static const String _analyzeColorsEndpoint = '/analyze-colors';
+  static const String _analyzeColorsEndpoint = '/api/analyze-colors';
 
   /// Check if the AI backend is available
   static Future<bool> isBackendAvailable() async {
