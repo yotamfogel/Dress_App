@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 
 class AIBackendManager {
   // Your computer's IP address with accessible port
-  static const String _localUrl = 'http://192.168.1.172:8010';
+  static const String _localUrl = 'http://192.168.1.172:7000';
   
   // Cloud deployment URL (update this when you deploy to Railway)
   static const String _cloudUrl = 'https://your-ai-backend.railway.app';
