@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# AI Backend - exclude logs, models, and cache
+ai_backend/*.log
+ai_backend/__pycache__/
+ai_backend/*.pt
+ai_backend/*.pth
