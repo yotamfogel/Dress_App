@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class AIBackendManager {
-  // Your computer's IP address for Android device access
-  static const String _localUrl = 'http://192.168.1.172:8001';
+  // Your computer's IP address with accessible port
+  static const String _localUrl = 'http://192.168.1.172:8010';
   
   // Cloud deployment URL (update this when you deploy to Railway)
   static const String _cloudUrl = 'https://your-ai-backend.railway.app';
@@ -13,14 +13,14 @@ class AIBackendManager {
   // Use local URL for development, cloud URL for production
   static String get _baseUrl {
     if (kDebugMode) {
-      return _localUrl; // Use your IP in debug mode
+      return _localUrl; // Use your IP with port 8010
     } else {
       return _cloudUrl; // Use cloud URL in release mode
     }
   }
   
   // Health check endpoint
-  static const String _healthEndpoint = '/api/health';
+  static const String _healthEndpoint = '/ai/health';
   
   // Clothing detection endpoint
   static const String _detectEndpoint = '/api/detect-clothing';
