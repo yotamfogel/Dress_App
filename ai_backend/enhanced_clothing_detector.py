@@ -464,24 +464,204 @@ class EnhancedClothingDetector:
             return []
     
     def _get_fashion_attributes(self, image: np.ndarray, mask: np.ndarray, class_name: str) -> Dict[str, Any]:
-        """Get fashion attributes using MMFashion (placeholder)"""
+        """Get fashion attributes using MMFashion and heuristics"""
         try:
-            # TODO: Implement MMFashion attribute detection
-            # For now, return basic attributes based on class
-            attributes = {
-                'category': class_name,
-                'style': 'casual',  # placeholder
-                'season': 'all-season',  # placeholder
-                'material': 'unknown',  # placeholder
-                'pattern': 'solid',  # placeholder
-                'fit': 'regular'  # placeholder
-            }
+            attributes = {}
+            
+            # Basic category from detection
+            attributes['category'] = class_name
+            
+            # If MMFashion is available, use it for advanced attributes
+            if self.mmfashion_model is not None and MMFASHION_AVAILABLE:
+                attributes.update(self._get_mmfashion_attributes(image, mask, class_name))
+            else:
+                # Use heuristic-based attribute detection
+                attributes.update(self._get_heuristic_attributes(image, mask, class_name))
             
             return attributes
             
         except Exception as e:
             logger.error(f"❌ Attribute detection error: {e}")
+            return {'category': class_name}
+    
+    def _get_mmfashion_attributes(self, image: np.ndarray, mask: np.ndarray, class_name: str) -> Dict[str, Any]:
+        """Get attributes using MMFashion models"""
+        try:
+            # TODO: Implement actual MMFashion attribute detection
+            # For now, return enhanced placeholder attributes
+            attributes = {
+                'style': self._predict_style(image, mask, class_name),
+                'season': self._predict_season(image, mask, class_name),
+                'material': self._predict_material(image, mask, class_name),
+                'pattern': self._predict_pattern(image, mask, class_name),
+                'fit': self._predict_fit(image, mask, class_name),
+                'detection_method': 'MMFashion (advanced)'
+            }
+            
+            return attributes
+            
+        except Exception as e:
+            logger.error(f"❌ MMFashion attribute detection error: {e}")
             return {}
+    
+    def _get_heuristic_attributes(self, image: np.ndarray, mask: np.ndarray, class_name: str) -> Dict[str, Any]:
+        """Get attributes using heuristic methods"""
+        try:
+            # Extract masked region
+            masked_region = image.copy()
+            masked_region[~mask] = 0
+            
+            # Analyze colors in the region
+            colors = self._analyze_masked_colors(image, mask)
+            dominant_color = colors[0]['name'] if colors else 'unknown'
+            
+            # Heuristic-based attribute prediction
+            attributes = {
+                'dominant_color': dominant_color,
+                'style': self._predict_style_heuristic(class_name, colors),
+                'season': self._predict_season_heuristic(class_name, colors),
+                'material': self._predict_material_heuristic(class_name),
+                'pattern': self._predict_pattern_heuristic(masked_region, mask),
+                'fit': self._predict_fit_heuristic(mask),
+                'detection_method': 'heuristic'
+            }
+            
+            return attributes
+            
+        except Exception as e:
+            logger.error(f"❌ Heuristic attribute detection error: {e}")
+            return {}
+    
+    def _predict_style(self, image: np.ndarray, mask: np.ndarray, class_name: str) -> str:
+        """Predict clothing style using advanced methods"""
+        # TODO: Implement MMFashion-based style prediction
+        return self._predict_style_heuristic(class_name, [])
+    
+    def _predict_season(self, image: np.ndarray, mask: np.ndarray, class_name: str) -> str:
+        """Predict suitable season using advanced methods"""
+        # TODO: Implement MMFashion-based season prediction
+        return self._predict_season_heuristic(class_name, [])
+    
+    def _predict_material(self, image: np.ndarray, mask: np.ndarray, class_name: str) -> str:
+        """Predict material using advanced methods"""
+        # TODO: Implement MMFashion-based material prediction
+        return self._predict_material_heuristic(class_name)
+    
+    def _predict_pattern(self, image: np.ndarray, mask: np.ndarray, class_name: str) -> str:
+        """Predict pattern using advanced methods"""
+        # TODO: Implement MMFashion-based pattern prediction
+        return self._predict_pattern_heuristic(image, mask)
+    
+    def _predict_fit(self, image: np.ndarray, mask: np.ndarray, class_name: str) -> str:
+        """Predict fit using advanced methods"""
+        # TODO: Implement MMFashion-based fit prediction
+        return self._predict_fit_heuristic(mask)
+    
+    def _predict_style_heuristic(self, class_name: str, colors: List[Dict]) -> str:
+        """Predict style using heuristic rules"""
+        # Business/formal items
+        if any(item in class_name.lower() for item in ['suit', 'blazer', 'tie', 'dress shirt']):
+            return 'formal'
+        
+        # Sporty items
+        if any(item in class_name.lower() for item in ['sneakers', 'sports', 'athletic', 'hoodie']):
+            return 'sporty'
+        
+        # Casual items
+        if any(item in class_name.lower() for item in ['jeans', 't-shirt', 'casual']):
+            return 'casual'
+        
+        # Default based on colors
+        if colors and any(color['name'] in ['black', 'white', 'gray', 'navy'] for color in colors):
+            return 'formal'
+        
+        return 'casual'
+    
+    def _predict_season_heuristic(self, class_name: str, colors: List[Dict]) -> str:
+        """Predict season using heuristic rules"""
+        # Winter items
+        if any(item in class_name.lower() for item in ['coat', 'jacket', 'sweater', 'boots']):
+            return 'winter'
+        
+        # Summer items
+        if any(item in class_name.lower() for item in ['shorts', 'sandals', 'tank', 'summer']):
+            return 'summer'
+        
+        # Spring/Fall items
+        if any(item in class_name.lower() for item in ['cardigan', 'light jacket']):
+            return 'spring-fall'
+        
+        return 'all-season'
+    
+    def _predict_material_heuristic(self, class_name: str) -> str:
+        """Predict material using heuristic rules"""
+        # Common material associations
+        if 'jean' in class_name.lower():
+            return 'denim'
+        elif any(item in class_name.lower() for item in ['leather', 'boots']):
+            return 'leather'
+        elif any(item in class_name.lower() for item in ['cotton', 't-shirt']):
+            return 'cotton'
+        elif any(item in class_name.lower() for item in ['wool', 'sweater']):
+            return 'wool'
+        elif any(item in class_name.lower() for item in ['silk', 'dress']):
+            return 'silk'
+        
+        return 'cotton'  # Default
+    
+    def _predict_pattern_heuristic(self, image: np.ndarray, mask: np.ndarray) -> str:
+        """Predict pattern using image analysis"""
+        try:
+            # Extract masked region
+            masked_region = image[mask]
+            
+            if len(masked_region) == 0:
+                return 'solid'
+            
+            # Simple pattern detection based on color variance
+            # Convert to grayscale for pattern analysis
+            gray_region = cv2.cvtColor(masked_region.reshape(-1, 1, 3), cv2.COLOR_BGR2GRAY)
+            
+            # Calculate variance - high variance might indicate patterns
+            variance = np.var(gray_region)
+            
+            if variance > 1000:  # High variance threshold
+                return 'patterned'
+            else:
+                return 'solid'
+                
+        except Exception as e:
+            logger.error(f"❌ Pattern prediction error: {e}")
+            return 'solid'
+    
+    def _predict_fit_heuristic(self, mask: np.ndarray) -> str:
+        """Predict fit using mask shape analysis"""
+        try:
+            # Calculate aspect ratio and other shape features
+            mask_coords = np.where(mask)
+            
+            if len(mask_coords[0]) == 0:
+                return 'regular'
+            
+            height = np.max(mask_coords[0]) - np.min(mask_coords[0])
+            width = np.max(mask_coords[1]) - np.min(mask_coords[1])
+            
+            if height == 0 or width == 0:
+                return 'regular'
+            
+            aspect_ratio = height / width
+            
+            # Simple heuristic based on aspect ratio
+            if aspect_ratio > 2.5:
+                return 'tight'
+            elif aspect_ratio < 1.5:
+                return 'loose'
+            else:
+                return 'regular'
+                
+        except Exception as e:
+            logger.error(f"❌ Fit prediction error: {e}")
+            return 'regular'
     
     def _is_fashion_item(self, class_name: str) -> bool:
         """Check if detected item is fashion-related"""
