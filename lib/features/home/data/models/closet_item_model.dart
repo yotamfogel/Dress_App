@@ -15,7 +15,7 @@ class ColorInfo {
 
   factory ColorInfo.fromJson(Map<String, dynamic> json) {
     return ColorInfo(
-      name: json['name'] ?? 'unknown',
+      name: json['name'] ?? json['color'] ?? 'unknown',
       rgb: (json['rgb'] as List<dynamic>?)
               ?.map((value) => value as int)
               .toList() ??
@@ -33,37 +33,88 @@ class ColorInfo {
   }
 }
 
+class AIAnalysisData {
+  final String? clothingType;
+  final List<String> applicableStyles;
+  final List<ColorInfo> colors;
+  final String? colorDescription;
+  final double confidence;
+  final String detectionMethod;
+  final DateTime? analyzedAt;
+
+  AIAnalysisData({
+    this.clothingType,
+    this.applicableStyles = const [],
+    this.colors = const [],
+    this.colorDescription,
+    this.confidence = 0.0,
+    this.detectionMethod = 'Fashion Classification System',
+    this.analyzedAt,
+  });
+
+  factory AIAnalysisData.fromJson(Map<String, dynamic> json) {
+    return AIAnalysisData(
+      clothingType: json['clothing_type'] as String?,
+      applicableStyles: (json['applicable_styles'] as List<dynamic>?)
+              ?.map((style) => style.toString())
+              .toList() ??
+          [],
+      colors: (json['colors'] as List<dynamic>?)
+              ?.map((color) => ColorInfo.fromJson(color))
+              .toList() ??
+          [],
+      colorDescription: json['color_description'] as String?,
+      confidence: ((json['detection_details'] as Map<String, dynamic>?)?['confidence'] as num?)?.toDouble() ?? 0.0,
+      detectionMethod: ((json['detection_details'] as Map<String, dynamic>?)?['method'] as String?) ?? 'Fashion Classification System',
+      analyzedAt: DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'clothingType': clothingType,
+      'applicableStyles': applicableStyles,
+      'colors': colors.map((c) => c.toMap()).toList(),
+      'colorDescription': colorDescription,
+      'confidence': confidence,
+      'detectionMethod': detectionMethod,
+      'analyzedAt': analyzedAt?.millisecondsSinceEpoch,
+    };
+  }
+}
+
 class ClosetItemModel {
   final int? id;
   final String imagePath;
-  final String? clothingType;
-  final List<ColorInfo> colors;
-  final List<String> patterns;
-  final double confidence;
-  final Map<String, dynamic> features;
+  final AIAnalysisData? aiAnalysis;
+  final List<String> patterns; // Keep for backward compatibility
+  final Map<String, dynamic> features; // Keep for backward compatibility
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   ClosetItemModel({
     this.id,
     required this.imagePath,
-    this.clothingType,
-    this.colors = const [],
+    this.aiAnalysis,
     this.patterns = const [],
-    this.confidence = 0.0,
     this.features = const {},
     this.createdAt,
     this.updatedAt,
   });
 
+  // Convenience getters for easy access
+  String? get clothingType => aiAnalysis?.clothingType;
+  List<String> get applicableStyles => aiAnalysis?.applicableStyles ?? [];
+  List<ColorInfo> get colors => aiAnalysis?.colors ?? [];
+  String? get colorDescription => aiAnalysis?.colorDescription;
+  double get confidence => aiAnalysis?.confidence ?? 0.0;
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'imagePath': imagePath,
-      'clothingType': clothingType,
-      'colors': colors.map((color) => color.toMap()).toList(),
+      'aiAnalysis': aiAnalysis?.toMap(),
       'patterns': patterns,
-      'confidence': confidence,
       'features': features,
       'createdAt': createdAt?.millisecondsSinceEpoch,
       'updatedAt': updatedAt?.millisecondsSinceEpoch,
@@ -74,16 +125,13 @@ class ClosetItemModel {
     return ClosetItemModel(
       id: map['id'] as int?,
       imagePath: map['imagePath'] as String,
-      clothingType: map['clothingType'] as String?,
-      colors: (map['colors'] as List<dynamic>?)
-              ?.map((color) => ColorInfo.fromJson(color))
-              .toList() ??
-          [],
+      aiAnalysis: map['aiAnalysis'] != null 
+          ? _parseAIAnalysis(map['aiAnalysis'] as String?)
+          : _legacyToAIAnalysis(map), // Convert legacy data
       patterns: (map['patterns'] as List<dynamic>?)
               ?.map((pattern) => pattern as String)
               .toList() ??
           [],
-      confidence: (map['confidence'] as num?)?.toDouble() ?? 0.0,
       features: (map['features'] as Map<String, dynamic>?) ?? {},
       createdAt: map['createdAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int)
@@ -94,13 +142,59 @@ class ClosetItemModel {
     );
   }
 
+  static AIAnalysisData? _parseAIAnalysis(String? aiAnalysisJson) {
+    if (aiAnalysisJson == null) return null;
+    try {
+      final Map<String, dynamic> data = jsonDecode(aiAnalysisJson);
+      return AIAnalysisData(
+        clothingType: data['clothingType'] as String?,
+        applicableStyles: (data['applicableStyles'] as List<dynamic>?)
+                ?.map((style) => style.toString())
+                .toList() ??
+            [],
+        colors: (data['colors'] as List<dynamic>?)
+                ?.map((color) => ColorInfo.fromJson(color))
+                .toList() ??
+            [],
+        colorDescription: data['colorDescription'] as String?,
+        confidence: (data['confidence'] as num?)?.toDouble() ?? 0.0,
+        detectionMethod: data['detectionMethod'] as String? ?? 'Fashion Classification System',
+        analyzedAt: data['analyzedAt'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(data['analyzedAt'] as int)
+            : null,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Convert legacy data format to new AI analysis format
+  static AIAnalysisData? _legacyToAIAnalysis(Map<String, dynamic> map) {
+    final clothingType = map['clothingType'] as String?;
+    final colorsData = _parseColors(map['colors'] as String?);
+    
+    if (clothingType == null && colorsData.isEmpty) return null;
+    
+    return AIAnalysisData(
+      clothingType: clothingType,
+      applicableStyles: [], // Legacy data doesn't have styles
+      colors: colorsData,
+      colorDescription: colorsData.isNotEmpty 
+          ? colorsData.map((c) => '${c.percentage.toStringAsFixed(1)}% ${c.name}').join(', ')
+          : null,
+      confidence: (map['confidence'] as num?)?.toDouble() ?? 0.0,
+      detectionMethod: 'Legacy System',
+      analyzedAt: map['createdAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int)
+          : null,
+    );
+  }
+
   ClosetItemModel copyWith({
     int? id,
     String? imagePath,
-    String? clothingType,
-    List<ColorInfo>? colors,
+    AIAnalysisData? aiAnalysis,
     List<String>? patterns,
-    double? confidence,
     Map<String, dynamic>? features,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -108,14 +202,22 @@ class ClosetItemModel {
     return ClosetItemModel(
       id: id ?? this.id,
       imagePath: imagePath ?? this.imagePath,
-      clothingType: clothingType ?? this.clothingType,
-      colors: colors ?? this.colors,
+      aiAnalysis: aiAnalysis ?? this.aiAnalysis,
       patterns: patterns ?? this.patterns,
-      confidence: confidence ?? this.confidence,
       features: features ?? this.features,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
+  }
+
+  static List<ColorInfo> _parseColors(String? colorsJson) {
+    if (colorsJson == null) return [];
+    try {
+      final List<dynamic> colorsList = jsonDecode(colorsJson);
+      return colorsList.map((color) => ColorInfo.fromJson(color)).toList();
+    } catch (e) {
+      return [];
+    }
   }
 }
 
