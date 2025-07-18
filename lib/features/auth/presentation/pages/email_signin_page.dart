@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../shared/presentation/widgets/app_logo.dart';
 import '../../../../shared/presentation/widgets/version_banner.dart';
+import '../../../../core/utils/app_page_transitions.dart';
 
 class EmailSignInPage extends ConsumerStatefulWidget {
   const EmailSignInPage({super.key});
