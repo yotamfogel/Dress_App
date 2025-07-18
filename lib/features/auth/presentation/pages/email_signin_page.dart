@@ -324,8 +324,9 @@ class _EmailSignInPageState extends ConsumerState<EmailSignInPage> {
                       // Register button
                       OutlinedButton(
                         onPressed: () {
+                          // Use custom slide transition for register page
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => RegisterPage()),
+                            AppPageTransitions.slideFromRight(RegisterPage())
                           );
                         },
                         child: const Text('Register'),
