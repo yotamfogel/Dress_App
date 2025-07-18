@@ -8,7 +8,10 @@ class AIBackendManager {
   static const String _localUrl = 'http://10.0.2.2:5000';
   
   // For local development (browser/desktop)
-  static const String _localWebUrl = 'http://localhost:5000';
+  static const String _localWebUrl = 'http://10.64.134.249:5000';
+  
+  // For external access
+  static const String _externalUrl = 'http://10.64.134.249:5000';
   
   // Cloud deployment URL
   static const String _cloudUrl = 'https://your-ai-backend.railway.app';
@@ -18,7 +21,7 @@ class AIBackendManager {
     if (kDebugMode) {
       // Check if running on web
       if (kIsWeb) {
-        return _localWebUrl;
+        return _externalUrl;  // Use external IP for web access
       } else {
         return _localUrl; // Use emulator URL in debug mode
       }
