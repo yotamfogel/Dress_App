@@ -341,35 +341,72 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // AI Analysis Header
+                      if (item.aiAnalysis != null) ...[
+                        Row(
+                          children: [
+                            const Icon(Icons.psychology, color: Colors.purple, size: 20),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'AI Analysis',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      
                       // Clothing type
                       if (item.clothingType != null) ...[
-                        Text(
-                          'Type: ${item.clothingType!.toUpperCase()}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        _buildAnalysisSection(
+                          'Clothing Type',
+                          item.clothingType!.toUpperCase(),
+                          Icons.checkroom,
+                          Colors.blue,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
+                      ],
+                      
+                      // Applicable styles
+                      if (item.applicableStyles.isNotEmpty) ...[
+                        _buildAnalysisSection(
+                          'Applicable Styles',
+                          item.applicableStyles.join(', '),
+                          Icons.style,
+                          Colors.green,
+                        ),
+                        const SizedBox(height: 12),
                       ],
                       
                       // Colors
                       if (item.colors.isNotEmpty) ...[
-                        Text(
-                          'Colors:',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          children: [
+                            const Icon(Icons.palette, color: Colors.orange, size: 18),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Colors',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
+                          runSpacing: 4,
                           children: item.colors.map((color) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                                horizontal: 12,
+                                vertical: 6,
                               ),
                               decoration: BoxDecoration(
                                 color: Color.fromRGBO(
@@ -378,7 +415,7 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
                                   color.rgb[2],
                                   1,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: Colors.grey.shade300),
                               ),
                               child: Text(
@@ -395,13 +432,60 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
                         const SizedBox(height: 12),
                       ],
                       
-                      // Patterns
-                      if (item.patterns.isNotEmpty) ...[
-                        Text(
-                          'Patterns: ${item.patterns.join(', ')}',
-                          style: const TextStyle(fontSize: 14),
+                      // Color description
+                      if (item.colorDescription != null) ...[
+                        _buildAnalysisSection(
+                          'Color Breakdown',
+                          item.colorDescription!,
+                          Icons.color_lens,
+                          Colors.pink,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
+                      ],
+                      
+                      // AI Analysis metadata
+                      if (item.aiAnalysis != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.info, size: 16, color: Colors.grey),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Analysis Details',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Confidence: ${(item.confidence * 100).toStringAsFixed(1)}%',
+                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                              Text(
+                                'Method: ${item.aiAnalysis!.detectionMethod}',
+                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                              if (item.aiAnalysis!.analyzedAt != null)
+                                Text(
+                                  'Analyzed: ${item.aiAnalysis!.analyzedAt!.toString().split(' ')[0]}',
+                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                       ],
                       
                       // Date added
@@ -429,6 +513,170 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAnalysisSection(String title, String content, IconData icon, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 26),
+          child: Text(
+            content,
+            style: const TextStyle(fontSize: 13),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showFiltersDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Filter Items'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Clothing Types Filter
+                    if (_availableClothingTypes.isNotEmpty) ...[
+                      const Text(
+                        'Clothing Types',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: _availableClothingTypes.map((type) {
+                          final isSelected = _selectedClothingTypes.contains(type);
+                          return FilterChip(
+                            label: Text(type),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setDialogState(() {
+                                if (selected) {
+                                  _selectedClothingTypes.add(type);
+                                } else {
+                                  _selectedClothingTypes.remove(type);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    
+                    // Styles Filter
+                    if (_availableStyles.isNotEmpty) ...[
+                      const Text(
+                        'Styles',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: _availableStyles.map((style) {
+                          final isSelected = _selectedStyles.contains(style);
+                          return FilterChip(
+                            label: Text(style),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setDialogState(() {
+                                if (selected) {
+                                  _selectedStyles.add(style);
+                                } else {
+                                  _selectedStyles.remove(style);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    
+                    // Colors Filter
+                    if (_availableColors.isNotEmpty) ...[
+                      const Text(
+                        'Colors',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: _availableColors.map((color) {
+                          final isSelected = _selectedColors.contains(color);
+                          return FilterChip(
+                            label: Text(color),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setDialogState(() {
+                                if (selected) {
+                                  _selectedColors.add(color);
+                                } else {
+                                  _selectedColors.remove(color);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setDialogState(() {
+                      _selectedClothingTypes.clear();
+                      _selectedStyles.clear();
+                      _selectedColors.clear();
+                    });
+                  },
+                  child: const Text('Clear All'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    _applyFilters();
+                  },
+                  child: const Text('Apply Filters'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
