@@ -1,78 +1,116 @@
 # 🤖 AI Backend for Clothing Detection
 
-This folder contains the AI backend server that provides clothing detection and color analysis capabilities for the Flutter app.
+This folder contains two AI backend implementations for clothing detection and color analysis:
 
-## 🚀 Key Files
+## 🚀 Available Implementations
 
-### **Main Server Files:**
-- `start_http_server.py` - HTTP server for Android emulator testing
-- `start_android_server.py` - Android-accessible server
-- `start_wifi_server.py` - WiFi network server
+### 1. **Simple YOLO-Only** ⚡ (Recommended for testing)
+- **Server:** `start_http_server.py`
+- **Detector:** `simple_clothing_detector.py`
+- **Features:** Fast YOLO detection, basic color analysis
+- **Performance:** 2-5 seconds, 500MB memory
+- **Best for:** Quick testing, development, emulator
 
-### **AI Models:**
-- `simple_clothing_detector.py` - YOLO-based clothing detection
-- `color_analyzer.py` - Color analysis using K-means clustering
-- `clothing_detector.py` - Advanced clothing detection with SAM
+### 2. **Advanced YOLO + SAM** 🎯 (Production-ready)
+- **Server:** `start_advanced_server.py`
+- **Detector:** `clothing_detector.py`
+- **Features:** YOLO + SAM segmentation, advanced color analysis
+- **Performance:** 5-15 seconds, 2-3GB memory
+- **Best for:** High precision, production apps, detailed analysis
 
-### **Configuration:**
-- `requirements.txt` - Python dependencies
-- `start_local.bat` - Windows startup script
+## 📋 Quick Start
 
-### **Testing:**
-- `test_http_server.py` - Test HTTP server functionality
-- `test_android_backend.py` - Test Android connectivity
-- `test_network_complete.py` - Comprehensive network tests
-
-## 🎯 How to Use
-
-### **For Android Emulator:**
+### **For Flutter Emulator (Recommended):**
 ```bash
 cd ai_backend
 python start_http_server.py
 ```
-Then in Flutter app, the backend will be accessible at `http://10.0.2.2:8080`
 
-### **For Physical Android Device:**
+### **For Advanced Features:**
 ```bash
 cd ai_backend
-python start_wifi_server.py
+pip install segment-anything
+python start_advanced_server.py
 ```
-Use your computer's IP address with port 8080
-
-## 📋 Dependencies
-
-Install required packages:
-```bash
-pip install -r requirements.txt
-```
-
-**Note:** The YOLO model (`yolov8n.pt`) will be downloaded automatically on first run.
 
 ## 🧪 Testing
 
-Test the server:
+### **Test Simple Implementation:**
 ```bash
 python test_http_server.py
 ```
 
-## 🎨 AI Capabilities
+### **Test Advanced Implementation:**
+```bash
+python test_advanced_backend.py
+```
 
-- **Clothing Detection**: Detects shirts, pants, shoes, dresses, etc.
-- **Color Analysis**: Extracts dominant colors with percentages
-- **Confidence Scores**: Provides accuracy ratings for detections
-- **Fast Processing**: Optimized for 2-5 second response times
+## 📊 Feature Comparison
+
+| Feature | Simple YOLO | Advanced YOLO + SAM |
+|---------|-------------|---------------------|
+| Clothing Detection | ✅ Good | ✅ Excellent |
+| Segmentation | ❌ Bounding boxes | ✅ Pixel-perfect |
+| Startup Speed | ⚡ 5-10s | 🐌 2-5min (first run) |
+| Memory Usage | 💚 ~500MB | 🔴 ~2-3GB |
+| Accuracy | 📊 Good | 🎯 Excellent |
+
+## 🔧 Configuration Files
+
+### **Core Files:**
+- `requirements.txt` - Basic dependencies
+- `requirements_full.txt` - Full dependencies with SAM
+- `color_analyzer.py` - Color analysis (shared)
+
+### **Server Files:**
+- `start_http_server.py` - Simple YOLO server
+- `start_advanced_server.py` - Advanced YOLO + SAM server
+- `start_wifi_server.py` - Network server (legacy)
+
+### **AI Models:**
+- `simple_clothing_detector.py` - YOLO-only detection
+- `clothing_detector.py` - YOLO + SAM detection
+
+### **Testing:**
+- `test_http_server.py` - Test simple implementation
+- `test_advanced_backend.py` - Test advanced implementation
+- `test_*.py` - Various network and functionality tests
 
 ## 📱 Flutter Integration
 
-The Flutter app connects to this backend via the `AIBackendManager` class for:
-- Health checks
-- Clothing detection
-- Color analysis
-- Real-time AI processing
+Both implementations work with the Flutter app via these endpoints:
 
-## 🔧 Configuration
+### **Simple Implementation:**
+- `GET /ai/health` - Health check
+- `POST /ai/detect-clothing` - Basic clothing detection
+- `POST /ai/analyze-colors` - Color analysis
 
-The server automatically detects the environment and configures endpoints accordingly:
-- `/ai/health` - Health check
-- `/ai/detect-clothing` - Clothing detection
-- `/ai/analyze-colors` - Color analysis
+### **Advanced Implementation:**
+- `GET /ai/health` - Health check with SAM status
+- `GET /ai/models` - Model information
+- `POST /ai/detect-clothing` - Advanced detection
+- `POST /ai/analyze-colors` - Advanced color analysis
+- `POST /ai/segment-clothing` - Precise segmentation
+
+## 🎯 Which to Use?
+
+### **Use Simple YOLO-Only If:**
+- Testing with Flutter emulator
+- Limited hardware resources
+- Need fast response times
+- Basic detection is sufficient
+
+### **Use Advanced YOLO + SAM If:**
+- Building production application
+- Need high precision segmentation
+- Have sufficient hardware (8GB+ RAM)
+- Want detailed clothing analysis
+
+## 🚀 Current Status
+
+- ✅ **Simple YOLO**: Ready for emulator testing
+- ✅ **Advanced YOLO + SAM**: Available for production use
+- ✅ **Flutter Integration**: Works with both implementations
+- ✅ **Color Analysis**: Advanced clustering with hex colors
+
+See `IMPLEMENTATION_GUIDE.md` for detailed comparison and usage instructions.
