@@ -23,8 +23,17 @@ try:
     from detectron2.utils.visualizer import Visualizer
     from detectron2.data import MetadataCatalog
     DETECTRON2_AVAILABLE = True
+    print("✅ Detectron2 available")
 except ImportError:
     DETECTRON2_AVAILABLE = False
+    print("⚠️ Detectron2 not available, using fallback")
+
+# YOLO fallback imports
+try:
+    from ultralytics import YOLO
+    YOLO_AVAILABLE = True
+except ImportError:
+    YOLO_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
