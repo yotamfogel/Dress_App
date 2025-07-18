@@ -24,7 +24,7 @@ def demo_fashion_classification():
     print("4. Multiple item handling")
     print("=" * 60)
     
-    base_url = "http://localhost:5000"
+    base_url = "http://192.168.1.172:8080"
     
     # Demo 1: Single Item Analysis
     print("\n📋 DEMO 1: SINGLE ITEM ANALYSIS")

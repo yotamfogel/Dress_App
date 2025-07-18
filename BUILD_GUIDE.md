@@ -221,10 +221,10 @@ python start_server.py
 
 ```bash
 # Test API
-curl http://localhost:5000/health
+curl http://192.168.1.172:8080/health
 
 # Test detection
-curl -X POST http://localhost:5000/test
+curl -X POST http://192.168.1.172:8080/test
 ```
 
 ## 📱 Building for Different Platforms
@@ -283,7 +283,7 @@ Update `lib/core/services/ai_backend_manager.dart`:
 
 ```dart
 class AIBackendManager {
-  static const String baseUrl = 'http://localhost:5000';
+  static const String baseUrl = 'http://192.168.1.172:8080';
   // ... rest of configuration
 }
 ```
@@ -389,7 +389,7 @@ flutter test
 
 ```bash
 # Test API endpoints
-curl -X POST http://localhost:5000/detect-clothing \
+curl -X POST http://192.168.1.172:8080/detect-clothing \
   -H "Content-Type: application/json" \
   -d '{"image_base64": "..."}'
 ```

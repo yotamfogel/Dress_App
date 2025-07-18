@@ -1,7 +1,7 @@
 # 🚀 ENHANCED AI BACKEND - TESTING GUIDE
 
 ## Current Status
-✅ **Enhanced AI Backend**: RUNNING on http://localhost:5000
+✅ **Enhanced AI Backend**: RUNNING on http://192.168.1.172:8080
 ✅ **Flutter App**: CONFIGURED to connect to enhanced backend
 ✅ **Features**: All enhanced features ready for testing
 
@@ -13,7 +13,7 @@ You can test the enhanced AI backend directly using curl commands:
 
 ```bash
 # 1. Test health check
-curl -s http://localhost:5000/health | python -m json.tool
+curl -s http://192.168.1.172:8080/health | python -m json.tool
 
 # 2. Test with a sample image
 cd /app/ai_backend
@@ -116,7 +116,7 @@ The Flutter app has been updated to connect to the enhanced backend:
 ```dart
 // Updated configuration in ai_backend_manager.dart
 static const String _localUrl = 'http://10.0.2.2:5000';        // Android
-static const String _localWebUrl = 'http://localhost:5000';     // Web
+static const String _localWebUrl = 'http://192.168.1.172:8080';     // Web
 static const String _healthEndpoint = '/health';               // Updated
 static const String _detectEndpoint = '/detect-clothing';      // Updated
 ```
@@ -201,7 +201,7 @@ flutter run -d web-server --web-port=3000
 ## 🔍 Troubleshooting
 
 ### If tests fail:
-1. **Check backend**: `curl http://localhost:5000/health`
+1. **Check backend**: `curl http://192.168.1.172:8080/health`
 2. **Restart backend**: `cd /app/ai_backend && python start_enhanced_server.py`
 3. **Check logs**: `tail -f /app/ai_backend/server_current.log`
 

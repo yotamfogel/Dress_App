@@ -39,7 +39,7 @@ def image_to_base64(image):
 
 def test_enhanced_backend():
     """Test the enhanced AI backend"""
-    base_url = "http://localhost:5000"
+    base_url = "http://192.168.1.172:8080"
     
     print("🧪 Testing Enhanced AI Backend")
     print("=" * 50)

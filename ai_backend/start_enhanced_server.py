@@ -293,7 +293,7 @@ def test_endpoint():
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced AI Backend Server with Fashion Classification...")
-    print("📍 Server will run on: http://localhost:5000")
+    print("📍 Server will run on: http://192.168.1.172:8080")
     print("🔬 Features:")
     print("  - Fashion Type Classification")
     print("  - Style Category Mapping (21 styles)")
@@ -302,11 +302,8 @@ if __name__ == '__main__':
     print("  - User Feedback Integration")
     print()
     
-    # Initialize models
-    models_loaded = initialize_models()
-    
-    if not models_loaded:
-        print("❌ Failed to load models. Server will start but may not work properly.")
-    
-    print("🚀 Starting Flask server...")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Initialize models before starting the server
+    if initialize_models():
+        app.run(host='0.0.0.0', port=8080, threaded=True)
+    else:
+        print("❌ Failed to initialize models. Server not started.")

@@ -267,7 +267,7 @@ if __name__ == '__main__':
     print(f"📱 **FOR ANDROID PHONE, USE THIS URL:**")
     print(f"   http://{local_ip}:5000")
     print("=" * 70)
-    print(f"💻 Local computer access: http://localhost:5000")
+    print(f"💻 Local computer access: http://192.168.1.172:8080")
     print(f"🌐 Network IP: {local_ip}")
     print(f"📱 Make sure your phone is on the same WiFi network!")
     print("⚡ Using YOLO only for faster startup")

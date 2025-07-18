@@ -138,5 +138,5 @@ The AI clothing detection system is now:
 
 **Need help?** Check the server status:
 ```bash
-curl http://localhost:8080/ai/health
+curl http://192.168.1.172:8080/ai/health
 ```

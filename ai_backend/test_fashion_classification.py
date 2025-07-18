@@ -59,7 +59,7 @@ def test_fashion_classification():
     print("🧪 TESTING NEW FASHION CLASSIFICATION SYSTEM")
     print("=" * 60)
     
-    base_url = "http://localhost:5000"
+    base_url = "http://192.168.1.172:8080"
     
     # Test 1: Health check
     print("\n1️⃣ Testing Health Check...")

@@ -12,9 +12,9 @@ python start_local_server.py
 **Expected Output:**
 ```
 🤖 Starting Local AI Backend Server...
-📍 Server will run on: http://localhost:5000
+📍 Server will run on: http://192.168.1.172:8080
 📱 For Android emulator, use: http://10.0.2.2:5000
-🍎 For iOS simulator, use: http://localhost:5000
+🍎 For iOS simulator, use: http://192.168.1.172:8080
 
 🚀 Initializing Clothing Detector with SAM...
 ✅ YOLO model loaded

@@ -25,7 +25,7 @@ def simulate_flutter_app_experience():
     
     # Check backend health
     try:
-        response = requests.get('http://localhost:5000/health', timeout=5)
+        response = requests.get('http://192.168.1.172:8080/health', timeout=5)
         if response.status_code == 200:
             health = response.json()
             print(f"   ✅ AI Backend Status: {health['status']}")
@@ -92,7 +92,7 @@ def simulate_flutter_app_experience():
     # Enhanced Color Analysis
     print("\n🎨 ENHANCED COLOR ANALYSIS:")
     try:
-        response = requests.post('http://localhost:5000/analyze-colors', 
+        response = requests.post('http://192.168.1.172:8080/analyze-colors', 
                                 json={'image': base64_img}, timeout=15)
         if response.status_code == 200:
             data = response.json()
@@ -110,7 +110,7 @@ def simulate_flutter_app_experience():
     # Enhanced Clothing Detection
     print("\n👕 ENHANCED CLOTHING DETECTION:")
     try:
-        response = requests.post('http://localhost:5000/detect-clothing', 
+        response = requests.post('http://192.168.1.172:8080/detect-clothing', 
                                 json={'image': base64_img}, timeout=15)
         if response.status_code == 200:
             data = response.json()
@@ -139,7 +139,7 @@ def simulate_flutter_app_experience():
     # Complete Analysis
     print("\n🎯 COMPLETE ANALYSIS:")
     try:
-        response = requests.post('http://localhost:5000/analyze-complete', 
+        response = requests.post('http://192.168.1.172:8080/analyze-complete', 
                                 json={'image': base64_img}, timeout=15)
         if response.status_code == 200:
             data = response.json()

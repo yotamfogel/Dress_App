@@ -108,10 +108,10 @@ def main():
     print("-" * 40)
     
     endpoints = [
-        (f"http://localhost:5000/health", "Local Health Check"),
+        (f"http://192.168.1.172:8080/health", "Local Health Check"),
         (f"http://127.0.0.1:5000/health", "Loopback Health Check"),
         (f"http://{local_ip}:5000/health", "Network Health Check"),
-        (f"http://localhost:5000/test", "Local Test Endpoint"),
+        (f"http://192.168.1.172:8080/test", "Local Test Endpoint"),
         (f"http://{local_ip}:5000/test", "Network Test Endpoint"),
     ]
     

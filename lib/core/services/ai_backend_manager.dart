@@ -4,30 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class AIBackendManager {
-  // For Android emulator (10.0.2.2 maps to host localhost)
-  static const String _localUrl = 'http://10.0.2.2:5000';
-  
-  // For local development (browser/desktop)
-  static const String _localWebUrl = 'http://10.64.134.249:5000';
-  
-  // For external access
-  static const String _externalUrl = 'http://10.64.134.249:5000';
-  
-  // Cloud deployment URL
-  static const String _cloudUrl = 'https://your-ai-backend.railway.app';
-  
-  // Use local URL for development, cloud URL for production
+  // Set the advanced server IP here
+  static const String _advancedServerUrl = 'http://192.168.1.172:8080';
+
   static String get _baseUrl {
-    if (kDebugMode) {
-      // Check if running on web
-      if (kIsWeb) {
-        return _externalUrl;  // Use external IP for web access
-      } else {
-        return _localUrl; // Use emulator URL in debug mode
-      }
-    } else {
-      return _cloudUrl; // Use cloud URL in release mode
-    }
+    return _advancedServerUrl;
   }
   
   // Health check endpoint
@@ -163,8 +144,8 @@ class AIBackendManager {
   }
 
   /// Get local URL for manual testing
-  static String get localUrl => _localUrl;
+  static String get localUrl => _advancedServerUrl;
   
   /// Get cloud URL for production
-  static String get cloudUrl => _cloudUrl;
+  static String get cloudUrl => _advancedServerUrl;
 } 

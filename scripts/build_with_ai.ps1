@@ -11,7 +11,7 @@ Write-Host "==========================================" -ForegroundColor Green
 # Function to check if AI backend is running
 function Test-AIBackend {
     try {
-        $response = Invoke-WebRequest -Uri "http://localhost:5000/health" -TimeoutSec 2 -UseBasicParsing
+        $response = Invoke-WebRequest -Uri "http://192.168.1.172:8080/health" -TimeoutSec 2 -UseBasicParsing
         return $response.StatusCode -eq 200
     }
     catch {

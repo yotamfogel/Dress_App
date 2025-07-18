@@ -30,7 +30,7 @@ python start_local_server.py
 
 ### Step 2: Verify the Backend is Running
 
-Open your browser and go to: `http://localhost:5000/health`
+Open your browser and go to: `http://192.168.1.172:8080/health`
 
 You should see:
 ```json
@@ -97,9 +97,9 @@ python start_local_server.py
 **Expected Output:**
 ```
 🤖 Starting Local AI Backend Server...
-📍 Server will run on: http://localhost:5000
+📍 Server will run on: http://192.168.1.172:8080
 📱 For Android emulator, use: http://10.0.2.2:5000
-🍎 For iOS simulator, use: http://localhost:5000
+🍎 For iOS simulator, use: http://192.168.1.172:8080
 
 🚀 Initializing Clothing Detector with SAM...
 ✅ YOLO model loaded
@@ -133,24 +133,24 @@ You can test the connection manually:
 
 1. **Health Check**
    ```
-   GET http://localhost:5000/health
+   GET http://192.168.1.172:8080/health
    ```
 
 2. **Test Endpoint**
    ```
-   GET http://localhost:5000/test
+   GET http://192.168.1.172:8080/test
    ```
 
 3. **Clothing Detection**
    ```
-   POST http://localhost:5000/detect-clothing
+   POST http://192.168.1.172:8080/detect-clothing
    Content-Type: application/json
    Body: {"image": "base64_encoded_image"}
    ```
 
 4. **Color Analysis**
    ```
-   POST http://localhost:5000/analyze-colors
+   POST http://192.168.1.172:8080/analyze-colors
    Content-Type: application/json
    Body: {"image": "base64_encoded_image"}
    ```
@@ -191,7 +191,7 @@ taskkill /PID <PID> /F
 
 **Check URL Configuration**
 - Android emulator: `http://10.0.2.2:5000`
-- iOS simulator: `http://localhost:5000`
+- iOS simulator: `http://192.168.1.172:8080`
 - Physical device: Use your computer's IP address
 
 **Check Network**
@@ -230,7 +230,7 @@ INFO:__main__:✅ Clothing Detector initialized successfully!
 ### Health Monitoring
 ```bash
 # Check server health
-curl http://localhost:5000/health
+curl http://192.168.1.172:8080/health
 
 # Check from Flutter
 await AIClothingService.isAvailable()

@@ -46,7 +46,7 @@ start /B python start_server.py
 echo ⏳ Waiting for server to start...
 set /a attempts=0
 :wait_loop
-curl -s http://localhost:5000/health >nul 2>&1
+curl -s http://192.168.1.172:8080/health >nul 2>&1
 if errorlevel 1 (
     set /a attempts+=1
     if !attempts! lss 30 (

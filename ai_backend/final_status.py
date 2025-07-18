@@ -14,7 +14,7 @@ def final_status_check():
     
     # Check server health
     try:
-        response = requests.get("http://localhost:5000/health")
+        response = requests.get("http://192.168.1.172:8080/health")
         if response.status_code == 200:
             health = response.json()
             print("✅ SERVER STATUS: ACTIVE")

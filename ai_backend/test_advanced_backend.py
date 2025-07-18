@@ -44,7 +44,7 @@ def test_advanced_backend():
     print("🔍 Test 1: Health Check")
     try:
         start_time = time.time()
-        response = requests.get('http://localhost:8080/ai/health', timeout=30)
+        response = requests.get('http://192.168.1.172:8080/ai/health', timeout=30)
         elapsed = time.time() - start_time
         
         if response.status_code == 200:
@@ -67,7 +67,7 @@ def test_advanced_backend():
     # Test 2: Model information
     print("🔍 Test 2: Model Information")
     try:
-        response = requests.get('http://localhost:8080/ai/models', timeout=10)
+        response = requests.get('http://192.168.1.172:8080/ai/models', timeout=10)
         if response.status_code == 200:
             result = response.json()
             print("✅ Model info PASSED")
@@ -89,7 +89,7 @@ def test_advanced_backend():
     try:
         start_time = time.time()
         response = requests.post(
-            'http://localhost:8080/ai/detect-clothing',
+            'http://192.168.1.172:8080/ai/detect-clothing',
             json={'image': base64_image},
             timeout=60  # Longer timeout for advanced processing
         )
@@ -125,7 +125,7 @@ def test_advanced_backend():
     try:
         start_time = time.time()
         response = requests.post(
-            'http://localhost:8080/ai/analyze-colors',
+            'http://192.168.1.172:8080/ai/analyze-colors',
             json={'image': base64_image},
             timeout=30
         )
@@ -153,7 +153,7 @@ def test_advanced_backend():
     try:
         start_time = time.time()
         response = requests.post(
-            'http://localhost:8080/ai/segment-clothing',
+            'http://192.168.1.172:8080/ai/segment-clothing',
             json={'image': base64_image},
             timeout=90  # Very long timeout for SAM
         )
@@ -191,7 +191,7 @@ def test_advanced_backend():
     
     # Check if SAM is available
     try:
-        response = requests.get('http://localhost:8080/ai/health', timeout=10)
+        response = requests.get('http://192.168.1.172:8080/ai/health', timeout=10)
         if response.status_code == 200:
             result = response.json()
             if result.get('sam_loaded'):

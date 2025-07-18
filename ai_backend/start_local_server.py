@@ -197,9 +197,9 @@ def analyze_colors():
 
 if __name__ == '__main__':
     print("🤖 Starting Local AI Backend Server...")
-    print("📍 Server will run on: http://localhost:5000")
+    print("📍 Server will run on: http://192.168.1.172:8080")
     print("📱 For Android emulator, use: http://10.0.2.2:5000")
-    print("🍎 For iOS simulator, use: http://localhost:5000")
+    print("🍎 For iOS simulator, use: http://192.168.1.172:8080")
     print()
     
     # Initialize models

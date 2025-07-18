@@ -75,7 +75,7 @@ def image_to_base64(image):
 
 def test_realistic_clothing_detection():
     """Test with realistic clothing image"""
-    base_url = "http://localhost:5000"
+    base_url = "http://192.168.1.172:8080"
     
     print("🧪 Testing Enhanced AI Backend with Realistic Clothing")
     print("=" * 60)

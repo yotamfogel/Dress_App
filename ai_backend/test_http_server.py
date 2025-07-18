@@ -37,7 +37,7 @@ def test_server():
     # Test 1: Health check
     print("🔍 Test 1: Health Check")
     try:
-        response = requests.get('http://localhost:8080/ai/health', timeout=10)
+        response = requests.get('http://192.168.1.172:8080/ai/health', timeout=10)
         if response.status_code == 200:
             result = response.json()
             print("✅ Health check PASSED")
@@ -57,7 +57,7 @@ def test_server():
     # Test 2: Test endpoint
     print("🔍 Test 2: Test Endpoint")
     try:
-        response = requests.get('http://localhost:8080/ai/test', timeout=10)
+        response = requests.get('http://192.168.1.172:8080/ai/test', timeout=10)
         if response.status_code == 200:
             result = response.json()
             print("✅ Test endpoint PASSED")
@@ -77,7 +77,7 @@ def test_server():
     
     try:
         response = requests.post(
-            'http://localhost:8080/ai/analyze-colors',
+            'http://192.168.1.172:8080/ai/analyze-colors',
             json={'image': base64_image},
             timeout=20
         )
@@ -100,7 +100,7 @@ def test_server():
     print("🔍 Test 4: Clothing Detection")
     try:
         response = requests.post(
-            'http://localhost:8080/ai/detect-clothing',
+            'http://192.168.1.172:8080/ai/detect-clothing',
             json={'image': base64_image},
             timeout=30
         )

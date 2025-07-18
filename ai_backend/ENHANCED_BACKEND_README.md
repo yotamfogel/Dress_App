@@ -172,7 +172,7 @@ The enhanced backend is **fully compatible** with the existing Flutter app:
 ### Server Configuration
 ```bash
 # Server URL
-http://localhost:5000
+http://192.168.1.172:8080
 
 # For Android emulator
 http://10.0.2.2:5000
@@ -206,7 +206,7 @@ with open("clothing_image.jpg", "rb") as f:
     image_data = base64.b64encode(f.read()).decode()
 
 # Enhanced detection
-response = requests.post("http://localhost:5000/detect-clothing", 
+response = requests.post("http://192.168.1.172:8080/detect-clothing", 
                         json={"image": image_data})
 result = response.json()
 

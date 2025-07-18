@@ -39,7 +39,7 @@ def test_flutter_app_integration():
     print("=" * 50)
     print("Testing Enhanced AI Backend APIs that the Flutter app uses")
     
-    base_url = "http://localhost:5000"
+    base_url = "http://192.168.1.172:8080"
     
     # Test 1: Health check (Flutter app checks this first)
     print("\n1️⃣ Health Check (Flutter app startup):")

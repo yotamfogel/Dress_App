@@ -62,7 +62,7 @@ def image_to_base64(image):
 
 def test_clothing_detection_comprehensive():
     """Comprehensive test of clothing detection"""
-    base_url = "http://localhost:5000"
+    base_url = "http://192.168.1.172:8080"
     
     print("🧪 Comprehensive Enhanced AI Backend Test")
     print("=" * 60)
@@ -164,7 +164,7 @@ def test_clothing_detection_comprehensive():
 
 def test_api_endpoints():
     """Test all API endpoints"""
-    base_url = "http://localhost:5000"
+    base_url = "http://192.168.1.172:8080"
     
     print("\n🔗 Testing All API Endpoints")
     print("-" * 40)

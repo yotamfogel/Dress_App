@@ -8,7 +8,7 @@ Perfect an AI that detects pieces of clothing and color percentages of said piec
 ### ✅ Completed Features
 
 1. **AI Backend Server**
-   - Flask server running on `http://localhost:5000`
+   - Flask server running on `http://192.168.1.172:8080`
    - YOLO-based clothing detection using `ultralytics` (YOLOv8n)
    - Advanced color analysis using scikit-learn clustering
    - Base64 image processing for web integration
@@ -136,7 +136,7 @@ The AI can detect:
 
 ### 📞 Support
 
-- **Backend URL**: `http://localhost:5000` (local development)
+- **Backend URL**: `http://192.168.1.172:8080` (local development)
 - **Flutter App**: Brain icon in top-right corner
 - **Logs**: Check server logs for debugging
 - **Health Check**: Visit `/health` endpoint

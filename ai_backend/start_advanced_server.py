@@ -312,7 +312,7 @@ def start_server():
     print("🤖 Advanced AI HTTP Server Starting...")
     print("=" * 70)
     print("🔧 **Server accessible at:**")
-    print(f"   http://localhost:8080/ai/health")
+    print(f"   http://192.168.1.172:8080/ai/health")
     print(f"   http://10.0.2.2:8080/ai/health (Android emulator)")
     print("📱 **Test this URL in your browser first!**")
     print("⚡ Using YOLO + SAM for advanced clothing detection")

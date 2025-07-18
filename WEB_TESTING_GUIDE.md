@@ -86,7 +86,7 @@ Analysis Summary:
 
 ### **🔧 Backend Status:**
 
-✅ **Enhanced AI Backend**: Running on http://localhost:5000
+✅ **Enhanced AI Backend**: Running on http://192.168.1.172:8080
 ✅ **Flutter Web App**: Running on http://localhost:3000
 ✅ **Enhanced Features**: All active and ready
 ✅ **API Integration**: Fully connected
@@ -115,7 +115,7 @@ flutter run -d web-server --web-port=3000 --web-hostname=0.0.0.0
 #### **If AI features don't work:**
 ```bash
 # Check backend status
-curl http://localhost:5000/health
+curl http://192.168.1.172:8080/health
 
 # Restart if needed
 cd /app/ai_backend && python start_enhanced_server.py
