@@ -58,15 +58,15 @@ class AIBackendManager {
     }
   }
 
-  /// Detect clothing items in an image
-  static Future<Map<String, dynamic>?> detectClothing(File imageFile) async {
+  /// Analyze fashion item with advanced classification
+  static Future<Map<String, dynamic>?> analyzeFashion(File imageFile) async {
     try {
       // Convert image to base64
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
       
       final response = await http.post(
-        Uri.parse('$_baseUrl$_detectEndpoint'),
+        Uri.parse('$_baseUrl$_fashionAnalysisEndpoint'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'image': base64Image,
@@ -77,13 +77,45 @@ class AIBackendManager {
         return jsonDecode(response.body);
       } else {
         if (kDebugMode) {
-          print('AI Backend detection failed: ${response.statusCode} - ${response.body}');
+          print('Fashion analysis failed: ${response.statusCode} - ${response.body}');
         }
         return null;
       }
     } catch (e) {
       if (kDebugMode) {
-        print('AI Backend detection error: $e');
+        print('Fashion analysis error: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Handle multiple items selection
+  static Future<Map<String, dynamic>?> selectFashionItem(File imageFile, int itemSelection) async {
+    try {
+      // Convert image to base64
+      final bytes = await imageFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      
+      final response = await http.post(
+        Uri.parse('$_baseUrl$_fashionAnalysisEndpoint'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'image': base64Image,
+          'item_selection': itemSelection,
+        }),
+      ).timeout(const Duration(seconds: 30));
+      
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        if (kDebugMode) {
+          print('Fashion item selection failed: ${response.statusCode} - ${response.body}');
+        }
+        return null;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Fashion item selection error: $e');
       }
       return null;
     }
