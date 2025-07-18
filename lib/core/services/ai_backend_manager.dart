@@ -5,7 +5,10 @@ import 'package:flutter/foundation.dart';
 
 class AIBackendManager {
   // For Android emulator (10.0.2.2 maps to host localhost)
-  static const String _localUrl = 'http://10.0.2.2:8080';
+  static const String _localUrl = 'http://10.0.2.2:5000';
+  
+  // For local development (browser/desktop)
+  static const String _localWebUrl = 'http://localhost:5000';
   
   // Cloud deployment URL
   static const String _cloudUrl = 'https://your-ai-backend.railway.app';
@@ -13,7 +16,12 @@ class AIBackendManager {
   // Use local URL for development, cloud URL for production
   static String get _baseUrl {
     if (kDebugMode) {
-      return _localUrl; // Use emulator URL in debug mode
+      // Check if running on web
+      if (kIsWeb) {
+        return _localWebUrl;
+      } else {
+        return _localUrl; // Use emulator URL in debug mode
+      }
     } else {
       return _cloudUrl; // Use cloud URL in release mode
     }
