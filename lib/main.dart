@@ -60,31 +60,134 @@ final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/splash',
-      builder: (context, state) => const SplashPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const SplashPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Fade in for splash screen
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ),
     ),
     GoRoute(
       path: '/onboarding',
-      builder: (context, state) => const OnboardingPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const OnboardingPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Slide from right for onboarding
+          return SlideTransition(
+            position: animation.drive(
+              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero).chain(
+                CurveTween(curve: Curves.easeInOut),
+              ),
+            ),
+            child: child,
+          );
+        },
+      ),
     ),
     GoRoute(
       path: '/home',
-      builder: (context, state) => const HomePage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const HomePage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Fade and slide from bottom for home screen
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: animation.drive(
+                Tween(begin: const Offset(0.0, 0.3), end: Offset.zero).chain(
+                  CurveTween(curve: Curves.easeOutCubic),
+                ),
+              ),
+              child: child,
+            ),
+          );
+        },
+      ),
     ),
     GoRoute(
       path: '/email-signin',
-      builder: (context, state) => const EmailSignInPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const EmailSignInPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Scale transition for login screen
+          return ScaleTransition(
+            scale: animation.drive(
+              Tween(begin: 0.95, end: 1.0).chain(
+                CurveTween(curve: Curves.easeOutCubic),
+              ),
+            ),
+            child: FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+          );
+        },
+      ),
     ),
     GoRoute(
       path: '/questions',
-      builder: (context, state) => const QuestionsPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const QuestionsPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Slide from right for questions
+          return SlideTransition(
+            position: animation.drive(
+              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero).chain(
+                CurveTween(curve: Curves.easeInOut),
+              ),
+            ),
+            child: child,
+          );
+        },
+      ),
     ),
     GoRoute(
       path: '/preferences',
-      builder: (context, state) => const PreferencesPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const PreferencesPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Slide from bottom for preferences
+          return SlideTransition(
+            position: animation.drive(
+              Tween(begin: const Offset(0.0, 1.0), end: Offset.zero).chain(
+                CurveTween(curve: Curves.easeOutCubic),
+              ),
+            ),
+            child: child,
+          );
+        },
+      ),
     ),
     GoRoute(
       path: '/setup',
-      builder: (context, state) => const SetupPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const SetupPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Fade and slide from right for setup
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: animation.drive(
+                Tween(begin: const Offset(0.3, 0.0), end: Offset.zero).chain(
+                  CurveTween(curve: Curves.easeOutCubic),
+                ),
+              ),
+              child: child,
+            ),
+          );
+        },
+      ),
     ),
   ],
 );
