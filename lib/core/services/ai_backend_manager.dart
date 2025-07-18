@@ -33,10 +33,11 @@ class AIBackendManager {
   // Health check endpoint
   static const String _healthEndpoint = '/health';
   
-  // Clothing detection endpoint
-  static const String _detectEndpoint = '/detect-clothing';
+  // Fashion analysis endpoint (new main endpoint)
+  static const String _fashionAnalysisEndpoint = '/analyze-fashion';
   
-  // Color analysis endpoint
+  // Legacy endpoints for compatibility
+  static const String _detectEndpoint = '/detect-clothing';
   static const String _analyzeColorsEndpoint = '/analyze-colors';
 
   /// Check if the AI backend is available
