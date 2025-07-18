@@ -691,6 +691,10 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasActiveFilters = _selectedClothingTypes.isNotEmpty || 
+                             _selectedStyles.isNotEmpty || 
+                             _selectedColors.isNotEmpty;
+    
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
@@ -721,10 +725,57 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
                         fontFamily: 'Segoe UI',
                       ),
                     ),
-                    const SettingsButton(),
+                    Row(
+                      children: [
+                        // Filter button
+                        IconButton(
+                          onPressed: _showFiltersDialog,
+                          icon: Icon(
+                            Icons.filter_list,
+                            color: hasActiveFilters ? Colors.purple : const Color(0xFF461700),
+                          ),
+                          tooltip: 'Filter items',
+                        ),
+                        const SettingsButton(),
+                      ],
+                    ),
                   ],
                 ),
               ),
+              
+              // Filter status bar
+              if (hasActiveFilters) ...[
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.purple.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.filter_alt, size: 16, color: Colors.purple.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Filters active: ${_getFilterSummary()}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.purple.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _clearFilters,
+                        child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               
               // Content
               Expanded(
@@ -741,24 +792,37 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'AI automatically analyzes your clothing',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey.shade600,
+                          fontFamily: 'Segoe UI',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 24),
                       
                       _loading
                           ? const CircularProgressIndicator()
-                          : _items.isEmpty
+                          : _filteredItems.isEmpty
                               ? Expanded(
                                   child: Center(
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          Icons.checkroom_outlined,
+                                          hasActiveFilters 
+                                              ? Icons.search_off
+                                              : Icons.checkroom_outlined,
                                           size: 64,
                                           color: Colors.grey.shade400,
                                         ),
                                         const SizedBox(height: 16),
                                         Text(
-                                          'No items in your closet yet',
+                                          hasActiveFilters
+                                              ? 'No items match your filters'
+                                              : 'No items in your closet yet',
                                           style: TextStyle(
                                             fontSize: 18,
                                             color: Colors.grey.shade600,
@@ -766,100 +830,157 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          'Add your first clothing item to get started!',
+                                          hasActiveFilters
+                                              ? 'Try adjusting your filter criteria'
+                                              : 'Add your first clothing item to get started!',
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey.shade500,
                                           ),
                                         ),
+                                        if (hasActiveFilters) ...[
+                                          const SizedBox(height: 12),
+                                          TextButton(
+                                            onPressed: _clearFilters,
+                                            child: const Text('Clear Filters'),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
                                 )
                               : Expanded(
-                                  child: GridView.builder(
-                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      crossAxisSpacing: 12,
-                                      mainAxisSpacing: 12,
-                                      childAspectRatio: 0.8,
-                                    ),
-                                    itemCount: _items.length,
-                                    itemBuilder: (context, index) {
-                                      final item = _items[index];
-                                      return GestureDetector(
-                                        onTap: () => _showItemDetails(item),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(12),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.1),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: Stack(
-                                              children: [
-                                                // Image
-                                                Image.file(
-                                                  File(item.imagePath),
-                                                  width: double.infinity,
-                                                  height: double.infinity,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                                
-                                                // Overlay with info
-                                                Positioned(
-                                                  bottom: 0,
-                                                  left: 0,
-                                                  right: 0,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      gradient: LinearGradient(
-                                                        begin: Alignment.topCenter,
-                                                        end: Alignment.bottomCenter,
-                                                        colors: [
-                                                          Colors.transparent,
-                                                          Colors.black.withValues(alpha: 0.7),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        if (item.clothingType != null)
-                                                          Text(
-                                                            item.clothingType!.toUpperCase(),
-                                                            style: const TextStyle(
-                                                              color: Colors.white,
-                                                              fontSize: 12,
-                                                              fontWeight: FontWeight.bold,
-                                                            ),
-                                                          ),
-                                                        if (item.colors.isNotEmpty)
-                                                          Text(
-                                                            item.colors.first.name,
-                                                            style: const TextStyle(
-                                                              color: Colors.white,
-                                                              fontSize: 10,
-                                                            ),
-                                                          ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Results count
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: Text(
+                                          '${_filteredItems.length} ${_filteredItems.length == 1 ? 'item' : 'items'}${hasActiveFilters ? ' (filtered)' : ''}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade600,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                      );
-                                    },
+                                      ),
+                                      
+                                      // Items grid
+                                      Expanded(
+                                        child: GridView.builder(
+                                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            crossAxisSpacing: 12,
+                                            mainAxisSpacing: 12,
+                                            childAspectRatio: 0.8,
+                                          ),
+                                          itemCount: _filteredItems.length,
+                                          itemBuilder: (context, index) {
+                                            final item = _filteredItems[index];
+                                            return GestureDetector(
+                                              onTap: () => _showItemDetails(item),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black.withValues(alpha: 0.1),
+                                                      blurRadius: 8,
+                                                      offset: const Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  child: Stack(
+                                                    children: [
+                                                      // Image
+                                                      Image.file(
+                                                        File(item.imagePath),
+                                                        width: double.infinity,
+                                                        height: double.infinity,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                      
+                                                      // AI Analysis indicator
+                                                      if (item.aiAnalysis != null)
+                                                        Positioned(
+                                                          top: 8,
+                                                          right: 8,
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(4),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors.purple.withValues(alpha: 0.9),
+                                                              borderRadius: BorderRadius.circular(12),
+                                                            ),
+                                                            child: const Icon(
+                                                              Icons.psychology,
+                                                              color: Colors.white,
+                                                              size: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      
+                                                      // Overlay with info
+                                                      Positioned(
+                                                        bottom: 0,
+                                                        left: 0,
+                                                        right: 0,
+                                                        child: Container(
+                                                          decoration: BoxDecoration(
+                                                            gradient: LinearGradient(
+                                                              begin: Alignment.topCenter,
+                                                              end: Alignment.bottomCenter,
+                                                              colors: [
+                                                                Colors.transparent,
+                                                                Colors.black.withValues(alpha: 0.7),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          padding: const EdgeInsets.all(8),
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              if (item.clothingType != null)
+                                                                Text(
+                                                                  item.clothingType!.toUpperCase(),
+                                                                  style: const TextStyle(
+                                                                    color: Colors.white,
+                                                                    fontSize: 12,
+                                                                    fontWeight: FontWeight.bold,
+                                                                  ),
+                                                                ),
+                                                              if (item.applicableStyles.isNotEmpty)
+                                                                Text(
+                                                                  item.applicableStyles.first,
+                                                                  style: const TextStyle(
+                                                                    color: Colors.white,
+                                                                    fontSize: 10,
+                                                                  ),
+                                                                ),
+                                                              if (item.colors.isNotEmpty)
+                                                                Text(
+                                                                  item.colors.first.name,
+                                                                  style: const TextStyle(
+                                                                    color: Colors.white,
+                                                                    fontSize: 10,
+                                                                  ),
+                                                                ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                       
@@ -891,5 +1012,23 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
         ),
       ),
     );
+  }
+
+  String _getFilterSummary() {
+    final List<String> activeParts = [];
+    
+    if (_selectedClothingTypes.isNotEmpty) {
+      activeParts.add('${_selectedClothingTypes.length} type${_selectedClothingTypes.length == 1 ? '' : 's'}');
+    }
+    
+    if (_selectedStyles.isNotEmpty) {
+      activeParts.add('${_selectedStyles.length} style${_selectedStyles.length == 1 ? '' : 's'}');
+    }
+    
+    if (_selectedColors.isNotEmpty) {
+      activeParts.add('${_selectedColors.length} color${_selectedColors.length == 1 ? '' : 's'}');
+    }
+    
+    return activeParts.join(', ');
   }
 } 
