@@ -1,0 +1,32 @@
+# Enhanced AI Backend Requirements with Detectron2 and MMFashion
+Flask==3.0.0
+Flask-CORS==4.0.0
+numpy
+opencv-python
+Pillow
+scikit-learn
+webcolors
+requests
+python-dotenv
+gunicorn
+
+# PyTorch (install appropriate version for your system)
+torch
+torchvision
+torchaudio
+
+# Detectron2 (install from source)
+# git+https://github.com/facebookresearch/detectron2.git
+
+# MMFashion dependencies
+# mmcv-full
+# mmdet
+# mmfashion
+
+# Fallback YOLO support
+ultralytics
+
+# Additional dependencies for enhanced features
+matplotlib
+seaborn
+scipy
