@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-🚀 Enhanced AI Backend Server with Mask R-CNN + MMFashion
-Advanced clothing detection using Detectron2 Mask R-CNN and MMFashion
+🚀 Enhanced AI Backend Server with Fashion Classification System
+Advanced clothing detection, style classification, and color analysis
 """
 
 import os
 import sys
 import logging
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 import base64
 import io
@@ -18,6 +18,7 @@ import torch
 import traceback
 from enhanced_clothing_detector import EnhancedClothingDetector
 from color_analyzer import ColorAnalyzer
+from fashion_classification_system import FashionClassificationSystem
 
 # Configure logging
 logging.basicConfig(
@@ -27,21 +28,31 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app.secret_key = 'fashion_classification_secret_key'
 CORS(app)
 
 # Global variables for models
 enhanced_detector = None
 color_analyzer = None
+fashion_classifier = None
 
 def initialize_models():
-    """Initialize Enhanced Clothing Detector and Color Analyzer"""
-    global enhanced_detector, color_analyzer
+    """Initialize all AI models"""
+    global enhanced_detector, color_analyzer, fashion_classifier
     
     try:
-        logger.info("🚀 Initializing Enhanced Clothing Detector (Mask R-CNN + MMFashion)...")
+        logger.info("🚀 Initializing Enhanced AI Models...")
+        
+        # Initialize Enhanced Clothing Detector
         enhanced_detector = EnhancedClothingDetector()
+        
+        # Initialize Color Analyzer
         color_analyzer = ColorAnalyzer()
-        logger.info("✅ Enhanced Clothing Detector initialized successfully!")
+        
+        # Initialize Fashion Classification System
+        fashion_classifier = FashionClassificationSystem()
+        
+        logger.info("✅ All AI models initialized successfully!")
         return True
     except Exception as e:
         logger.error(f"❌ Failed to initialize models: {e}")
@@ -73,40 +84,28 @@ def health_check():
     """Health check endpoint"""
     return jsonify({
         "status": "healthy",
-        "message": "Enhanced AI Backend is running",
+        "message": "Enhanced AI Backend with Fashion Classification",
         "models_loaded": {
             "enhanced_detector": enhanced_detector is not None,
-            "color_analyzer": color_analyzer is not None
+            "color_analyzer": color_analyzer is not None,
+            "fashion_classifier": fashion_classifier is not None
         },
-        "version": "enhanced_v1",
+        "version": "fashion_v1",
         "features": [
-            "Mask R-CNN segmentation",
-            "MMFashion attributes",
-            "Advanced color analysis",
-            "Fashion-specific detection"
+            "Fashion Type Classification",
+            "Style Category Mapping",
+            "Color Percentage Analysis",
+            "Multiple Item Detection",
+            "User Feedback Integration"
         ]
     })
 
-@app.route('/test', methods=['GET'])
-def test_endpoint():
-    """Test endpoint for basic functionality"""
-    return jsonify({
-        "message": "Enhanced AI Backend is working!",
-        "models_loaded": {
-            "enhanced_detector": enhanced_detector is not None,
-            "color_analyzer": color_analyzer is not None
-        },
-        "capabilities": {
-            "segmentation": "Mask R-CNN based",
-            "attributes": "MMFashion based",
-            "color_analysis": "Advanced clustering",
-            "fallback": "YOLO available"
-        }
-    })
-
-@app.route('/detect-clothing', methods=['POST'])
-def detect_clothing():
-    """Detect clothing items with enhanced segmentation and attributes"""
+@app.route('/analyze-fashion', methods=['POST'])
+def analyze_fashion():
+    """
+    Main endpoint for fashion analysis
+    Returns: clothing type, applicable styles, and color percentages
+    """
     try:
         data = request.get_json()
         if not data or 'image' not in data:
@@ -123,50 +122,104 @@ def detect_clothing():
                 "error": "Invalid image data"
             }), 400
         
-        # Detect clothing
-        if enhanced_detector is None:
+        # Check if this is a follow-up request for item selection
+        if 'item_selection' in data and 'detected_items' in session:
+            try:
+                item_id = int(data['item_selection'])
+                detected_items = session['detected_items']
+                
+                # Analyze the selected item
+                result = fashion_classifier.analyze_selected_item(image, item_id, detected_items)
+                
+                # Clear session data
+                session.pop('detected_items', None)
+                
+                return jsonify(result)
+                
+            except ValueError:
+                return jsonify({
+                    "success": False,
+                    "error": "Invalid item selection. Please provide a number."
+                }), 400
+        
+        # Perform fashion analysis
+        if fashion_classifier is None:
             return jsonify({
                 "success": False,
-                "error": "Enhanced detector not initialized"
+                "error": "Fashion classifier not initialized"
             }), 500
         
-        logger.info("🔍 Detecting clothing items with enhanced models...")
-        detections = enhanced_detector.detect_clothing(image)
+        logger.info("🔍 Analyzing fashion image...")
+        analysis_result = fashion_classifier.analyze_clothing_image(image)
         
-        # Format results
-        items = []
-        for detection in detections:
-            item = {
-                "label": detection.get('label', 'unknown'),
-                "confidence": float(detection.get('confidence', 0.0)),
-                "bounding_box": detection.get('bounding_box', {}),
-                "colors": detection.get('colors', []),
-                "attributes": detection.get('attributes', {}),
-                "segmentation_available": detection.get('segmentation_available', False),
-                "mask_area": detection.get('mask_area', 0)
+        # Handle multiple items case
+        if analysis_result.get('multiple_items', False):
+            # Store detected items in session for follow-up
+            session['detected_items'] = analysis_result['items']
+            
+            # Format the response for multiple items
+            items_list = []
+            for item in analysis_result['items']:
+                items_list.append({
+                    'id': item['id'],
+                    'description': f"{item['label']} (confidence: {item['confidence']:.1%})"
+                })
+            
+            return jsonify({
+                "success": True,
+                "multiple_items": True,
+                "message": "Multiple clothing items detected. Please select which item to analyze:",
+                "items": items_list,
+                "instruction": "Send another request with 'item_selection': [item_id] to analyze the specific item."
+            })
+        
+        # Single item or whole image analysis
+        if 'analysis' in analysis_result:
+            analysis = analysis_result['analysis']
+            
+            # Format the response according to user requirements
+            response = {
+                "success": True,
+                "clothing_type": analysis.get('clothing_type', 'unknown'),
+                "applicable_styles": analysis.get('applicable_styles', []),
+                "colors": analysis.get('colors', []),
+                "color_description": analysis.get('color_description', 'No colors detected'),
+                "detection_details": {
+                    "detected_as": analysis.get('detected_as', 'unknown'),
+                    "confidence": analysis.get('confidence', 0),
+                    "method": "Fashion Classification System"
+                }
             }
-            items.append(item)
+            
+            # Add note if present
+            if 'note' in analysis:
+                response['note'] = analysis['note']
+            
+            return jsonify(response)
         
-        logger.info(f"✅ Found {len(items)} clothing items with enhanced detection")
-        
+        logger.error("❌ Unexpected analysis result format")
         return jsonify({
-            "success": True,
-            "items": items,
-            "total_items": len(items),
-            "detection_method": "Enhanced (Mask R-CNN + MMFashion)"
-        })
+            "success": False,
+            "error": "Unexpected analysis result format"
+        }), 500
         
     except Exception as e:
-        logger.error(f"❌ Enhanced clothing detection error: {e}")
+        logger.error(f"❌ Fashion analysis error: {e}")
         logger.error(traceback.format_exc())
         return jsonify({
             "success": False,
             "error": str(e)
         }), 500
 
+# Legacy endpoints for backward compatibility
+@app.route('/detect-clothing', methods=['POST'])
+def detect_clothing():
+    """Legacy endpoint - redirects to fashion analysis"""
+    return analyze_fashion()
+
 @app.route('/analyze-colors', methods=['POST'])
 def analyze_colors():
-    """Analyze colors in an image with enhanced accuracy"""
+    """Enhanced color analysis endpoint"""
     try:
         data = request.get_json()
         if not data or 'image' not in data:
@@ -190,7 +243,7 @@ def analyze_colors():
                 "error": "Color analyzer not initialized"
             }), 500
         
-        logger.info("🎨 Analyzing colors with enhanced accuracy...")
+        logger.info("🎨 Analyzing colors...")
         color_analysis = color_analyzer.analyze_colors(image)
         
         # Format results
@@ -219,148 +272,34 @@ def analyze_colors():
             "error": str(e)
         }), 500
 
-@app.route('/detect-attributes', methods=['POST'])
-def detect_attributes():
-    """Detect fashion attributes using MMFashion"""
-    try:
-        data = request.get_json()
-        if not data or 'image' not in data:
-            return jsonify({
-                "success": False,
-                "error": "No image data provided"
-            }), 400
-        
-        # Decode image
-        image = decode_base64_image(data['image'])
-        if image is None:
-            return jsonify({
-                "success": False,
-                "error": "Invalid image data"
-            }), 400
-        
-        # Detect attributes
-        if enhanced_detector is None:
-            return jsonify({
-                "success": False,
-                "error": "Enhanced detector not initialized"
-            }), 500
-        
-        logger.info("🏷️ Detecting fashion attributes...")
-        
-        # Get detections first
-        detections = enhanced_detector.detect_clothing(image)
-        
-        # Extract attributes for each detection
-        attributes_results = []
-        for detection in detections:
-            attributes = detection.get('attributes', {})
-            attributes_results.append({
-                "label": detection.get('label', 'unknown'),
-                "confidence": detection.get('confidence', 0.0),
-                "attributes": attributes
-            })
-        
-        logger.info(f"✅ Detected attributes for {len(attributes_results)} items")
-        
-        return jsonify({
-            "success": True,
-            "items": attributes_results,
-            "total_items": len(attributes_results),
-            "method": "MMFashion (placeholder)"
-        })
-        
-    except Exception as e:
-        logger.error(f"❌ Attribute detection error: {e}")
-        logger.error(traceback.format_exc())
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-@app.route('/analyze-complete', methods=['POST'])
-def analyze_complete():
-    """Complete analysis: detection + segmentation + colors + attributes"""
-    try:
-        data = request.get_json()
-        if not data or 'image' not in data:
-            return jsonify({
-                "success": False,
-                "error": "No image data provided"
-            }), 400
-        
-        # Decode image
-        image = decode_base64_image(data['image'])
-        if image is None:
-            return jsonify({
-                "success": False,
-                "error": "Invalid image data"
-            }), 400
-        
-        if enhanced_detector is None:
-            return jsonify({
-                "success": False,
-                "error": "Enhanced detector not initialized"
-            }), 500
-        
-        logger.info("🎯 Running complete analysis...")
-        
-        # Get enhanced detections (includes everything)
-        detections = enhanced_detector.detect_clothing(image)
-        
-        # Get overall color analysis
-        color_analysis = color_analyzer.analyze_colors(image) if color_analyzer else {}
-        
-        # Calculate summary statistics
-        total_items = len(detections)
-        segmented_items = sum(1 for d in detections if d.get('segmentation_available', False))
-        
-        # Get all unique colors
-        all_colors = []
-        for detection in detections:
-            all_colors.extend(detection.get('colors', []))
-        
-        # Get unique attributes
-        all_attributes = {}
-        for detection in detections:
-            attrs = detection.get('attributes', {})
-            for key, value in attrs.items():
-                if key not in all_attributes:
-                    all_attributes[key] = []
-                if value not in all_attributes[key]:
-                    all_attributes[key].append(value)
-        
-        logger.info(f"✅ Complete analysis: {total_items} items, {segmented_items} segmented")
-        
-        return jsonify({
-            "success": True,
-            "detections": detections,
-            "color_analysis": color_analysis,
-            "summary": {
-                "total_items": total_items,
-                "segmented_items": segmented_items,
-                "unique_colors": len(set(c['name'] for c in all_colors)),
-                "attributes_detected": len(all_attributes)
-            },
-            "method": "Enhanced Complete Analysis"
-        })
-        
-    except Exception as e:
-        logger.error(f"❌ Complete analysis error: {e}")
-        logger.error(traceback.format_exc())
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+@app.route('/test', methods=['GET'])
+def test_endpoint():
+    """Test endpoint for basic functionality"""
+    return jsonify({
+        "message": "Enhanced AI Backend with Fashion Classification is working!",
+        "models_loaded": {
+            "enhanced_detector": enhanced_detector is not None,
+            "color_analyzer": color_analyzer is not None,
+            "fashion_classifier": fashion_classifier is not None
+        },
+        "capabilities": {
+            "fashion_classification": "Clothing type identification",
+            "style_mapping": "21 style categories",
+            "color_analysis": "Percentage-based color detection",
+            "multiple_items": "Handle multiple clothing items",
+            "user_feedback": "Interactive item selection"
+        }
+    })
 
 if __name__ == '__main__':
-    print("🚀 Starting Enhanced AI Backend Server...")
+    print("🚀 Starting Enhanced AI Backend Server with Fashion Classification...")
     print("📍 Server will run on: http://localhost:5000")
     print("🔬 Features:")
-    print("  - Mask R-CNN segmentation")
-    print("  - MMFashion attributes")
-    print("  - Advanced color analysis")
-    print("  - Fashion-specific detection")
-    print("  - YOLO fallback support")
+    print("  - Fashion Type Classification")
+    print("  - Style Category Mapping (21 styles)")
+    print("  - Color Percentage Analysis")
+    print("  - Multiple Item Detection")
+    print("  - User Feedback Integration")
     print()
     
     # Initialize models
@@ -368,7 +307,6 @@ if __name__ == '__main__':
     
     if not models_loaded:
         print("❌ Failed to load models. Server will start but may not work properly.")
-        print("💡 The server will use fallback detection methods.")
     
     print("🚀 Starting Flask server...")
     app.run(host='0.0.0.0', port=5000, debug=True)
