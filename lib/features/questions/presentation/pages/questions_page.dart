@@ -75,6 +75,10 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
                 onPressed: () {
                   ref.read(questionsProvider.notifier).clearError();
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF461700),
+                  foregroundColor: const Color(0xFFFEFAD4),
+                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -123,7 +127,7 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
                 color: theme.colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -142,7 +146,7 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
                             Text(
                               'Question ${questionsState.currentQuestionIndex + 1} of ${questionsState.questions.length}',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                color: theme.colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                             Text(
@@ -201,6 +205,10 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
                           curve: Curves.easeInOut,
                         );
                       },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF461700),
+                        side: const BorderSide(color: Color(0xFF461700)),
+                      ),
                       child: const Text('Previous'),
                     )
                   else
@@ -214,6 +222,10 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
                             context.go('/home');
                           }
                         : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF461700),
+                      foregroundColor: const Color(0xFFFEFAD4),
+                    ),
                     child: Text(
                       questionsState.isCompleted ? 'Complete' : 'Next',
                     ),
@@ -229,7 +241,6 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
 
   Widget _buildQuestionCard(BuildContext context, QuestionModel question) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -265,7 +276,7 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
                 color: theme.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  color: theme.colorScheme.primary.withOpacity(0.2),
                 ),
               ),
               child: Row(
@@ -316,7 +327,7 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
             border: Border.all(
               color: isSelected
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.outline.withValues(alpha: 0.2),
+                  : theme.colorScheme.outline.withOpacity(0.2),
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -334,7 +345,7 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
                   option,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: isSelected
-                        ? theme.colorScheme.onPrimaryContainer
+                        ? const Color(0xFF461700) // Fixed secondary color for visibility
                         : theme.colorScheme.onSurfaceVariant,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
@@ -346,4 +357,4 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
       ),
     );
   }
-} 
+}

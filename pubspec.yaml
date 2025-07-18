@@ -31,8 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # Essential icons
   cupertino_icons: ^1.0.8
 
   # State Management
@@ -45,23 +44,14 @@ dependencies:
   # Networking
   dio: ^5.7.0
   http: ^1.1.0
-  process_run: ^0.14.2
 
-  # Splash Screens
-  flutter_native_splash: ^2.4.1
-  # rive: ^0.13.15  # Temporarily disabled due to build issues
-  # lottie: ^3.1.2
-
-  # Authentication - temporarily disabled
-  # firebase_auth: ^5.3.1
+  # Authentication
   google_sign_in: ^6.2.1
   sign_in_with_apple: ^6.1.2
 
   # Storage
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.3.2
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
   sqflite: ^2.3.2
   path: ^1.8.3
 

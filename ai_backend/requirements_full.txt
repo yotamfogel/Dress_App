@@ -1,0 +1,22 @@
+# Basic AI Backend Requirements
+Flask==3.0.0
+Flask-CORS==4.0.0
+ultralytics
+opencv-python
+Pillow
+numpy
+torch
+torchvision
+scikit-learn
+webcolors
+requests
+python-dotenv
+gunicorn
+
+# Advanced SAM Requirements (uncomment if you want to use SAM)
+# segment-anything
+# git+https://github.com/facebookresearch/segment-anything.git
+
+# Optional: For better performance
+# torch-audio  # Only if you have GPU support
+# accelerate   # For faster model loading

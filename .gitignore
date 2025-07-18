@@ -43,3 +43,50 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# AI Backend - exclude logs, models, and cache
+ai_backend/*.log
+ai_backend/__pycache__/
+ai_backend/*.pt
+ai_backend/*.pth
+ai_backend/yolov8*.pt
+
+# Flutter installation
+flutter/
+*.tar.xz
+
+# Large files and temporary files
+*.tar
+*.gz
+*.zip
+*.rar
+*.7z
+
+# Log files
+*.log
+*.err
+*.out
+
+# Python cache and temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files with sensitive data
+.env.local
+.env.production
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
