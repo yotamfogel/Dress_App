@@ -124,12 +124,17 @@ class EnhancedClothingDetector:
         """Setup fallback detector if Detectron2 is not available"""
         try:
             logger.info("Setting up fallback detector...")
-            from ultralytics import YOLO
-            self.fallback_model = YOLO('yolov8n.pt')
-            logger.info("✅ Fallback YOLO detector initialized")
+            if YOLO_AVAILABLE:
+                from ultralytics import YOLO
+                self.fallback_model = YOLO('yolov8n.pt')
+                logger.info("✅ Fallback YOLO detector initialized")
+            else:
+                # Create a very basic detector
+                self.fallback_model = None
+                logger.warning("⚠️ No detection models available")
         except Exception as e:
             logger.error(f"❌ Error setting up fallback detector: {e}")
-            raise
+            self.fallback_model = None
     
     def _setup_mmfashion(self):
         """Setup MMFashion for attribute parsing"""
