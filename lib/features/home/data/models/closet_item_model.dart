@@ -53,12 +53,25 @@ class AIAnalysisData {
   });
 
   factory AIAnalysisData.fromJson(Map<String, dynamic> json) {
+    // Handle applicable_styles which can be either a string or a list
+    List<String> parseApplicableStyles(dynamic styles) {
+      if (styles == null) return [];
+      if (styles is List) {
+        return styles.map((style) => style.toString()).toList();
+      }
+      if (styles is String) {
+        // Split by comma and clean up
+        return styles.split(',')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      }
+      return [];
+    }
+
     return AIAnalysisData(
       clothingType: json['clothing_type'] as String?,
-      applicableStyles: (json['applicable_styles'] as List<dynamic>?)
-              ?.map((style) => style.toString())
-              .toList() ??
-          [],
+      applicableStyles: parseApplicableStyles(json['applicable_styles']),
       colors: (json['colors'] as List<dynamic>?)
               ?.map((color) => ColorInfo.fromJson(color))
               .toList() ??
@@ -128,11 +141,8 @@ class ClosetItemModel {
       aiAnalysis: map['aiAnalysis'] != null 
           ? _parseAIAnalysis(map['aiAnalysis'] as String?)
           : _legacyToAIAnalysis(map), // Convert legacy data
-      patterns: (map['patterns'] as List<dynamic>?)
-              ?.map((pattern) => pattern as String)
-              .toList() ??
-          [],
-      features: (map['features'] as Map<String, dynamic>?) ?? {},
+      patterns: _parsePatterns(map['patterns'] as String?),
+      features: _parseFeatures(map['features'] as String?),
       createdAt: map['createdAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int)
           : null,
@@ -146,12 +156,26 @@ class ClosetItemModel {
     if (aiAnalysisJson == null) return null;
     try {
       final Map<String, dynamic> data = jsonDecode(aiAnalysisJson);
+      
+      // Handle applicable_styles which can be either a string or a list
+      List<String> parseApplicableStyles(dynamic styles) {
+        if (styles == null) return [];
+        if (styles is List) {
+          return styles.map((style) => style.toString()).toList();
+        }
+        if (styles is String) {
+          // Split by comma and clean up
+          return styles.split(',')
+              .map((s) => s.trim())
+              .where((s) => s.isNotEmpty)
+              .toList();
+        }
+        return [];
+      }
+      
       return AIAnalysisData(
         clothingType: data['clothingType'] as String?,
-        applicableStyles: (data['applicableStyles'] as List<dynamic>?)
-                ?.map((style) => style.toString())
-                .toList() ??
-            [],
+        applicableStyles: parseApplicableStyles(data['applicableStyles']),
         colors: (data['colors'] as List<dynamic>?)
                 ?.map((color) => ColorInfo.fromJson(color))
                 .toList() ??
@@ -164,6 +188,7 @@ class ClosetItemModel {
             : null,
       );
     } catch (e) {
+      print('Error parsing AI analysis: $e');
       return null;
     }
   }
@@ -217,6 +242,26 @@ class ClosetItemModel {
       return colorsList.map((color) => ColorInfo.fromJson(color)).toList();
     } catch (e) {
       return [];
+    }
+  }
+
+  static List<String> _parsePatterns(String? patternsJson) {
+    if (patternsJson == null) return [];
+    try {
+      final List<dynamic> patternsList = jsonDecode(patternsJson);
+      return patternsList.map((pattern) => pattern.toString()).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Map<String, dynamic> _parseFeatures(String? featuresJson) {
+    if (featuresJson == null) return {};
+    try {
+      final Map<String, dynamic> features = jsonDecode(featuresJson);
+      return features;
+    } catch (e) {
+      return {};
     }
   }
 }
@@ -278,10 +323,10 @@ class ClosetDatabaseHelper {
       'imagePath': item.imagePath,
       'aiAnalysis': item.aiAnalysis != null ? jsonEncode(item.aiAnalysis!.toMap()) : null,
       'clothingType': item.aiAnalysis?.clothingType,
-      'colors': jsonEncode(item.colors.map((c) => c.toMap()).toList()),
-      'patterns': jsonEncode(item.patterns),
+      'colors': item.colors.isNotEmpty ? jsonEncode(item.colors.map((c) => c.toMap()).toList()) : null,
+      'patterns': item.patterns.isNotEmpty ? jsonEncode(item.patterns) : null,
       'confidence': item.confidence,
-      'features': jsonEncode(item.features),
+      'features': item.features.isNotEmpty ? jsonEncode(item.features) : null,
       'createdAt': item.createdAt?.millisecondsSinceEpoch,
       'updatedAt': item.updatedAt?.millisecondsSinceEpoch,
     });
@@ -340,10 +385,10 @@ class ClosetDatabaseHelper {
         'imagePath': item.imagePath,
         'aiAnalysis': item.aiAnalysis != null ? jsonEncode(item.aiAnalysis!.toMap()) : null,
         'clothingType': item.aiAnalysis?.clothingType,
-        'colors': jsonEncode(item.colors.map((c) => c.toMap()).toList()),
-        'patterns': jsonEncode(item.patterns),
+        'colors': item.colors.isNotEmpty ? jsonEncode(item.colors.map((c) => c.toMap()).toList()) : null,
+        'patterns': item.patterns.isNotEmpty ? jsonEncode(item.patterns) : null,
         'confidence': item.confidence,
-        'features': jsonEncode(item.features),
+        'features': item.features.isNotEmpty ? jsonEncode(item.features) : null,
         'updatedAt': DateTime.now().millisecondsSinceEpoch,
       },
       where: 'id = ?',

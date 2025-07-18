@@ -189,6 +189,9 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
       // Analyze image with AI
       final aiResult = await AIBackendManager.analyzeFashion(File(imageFile.path));
       
+      // Debug logging
+      print('AI Result: $aiResult');
+      
       AIAnalysisData? aiAnalysis;
       
       if (aiResult != null && aiResult['success'] == true) {
@@ -223,13 +226,21 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
               selectedItem
             );
             
+            print('Selected Result: $selectedResult');
+            
             if (selectedResult != null && selectedResult['success'] == true) {
-              aiAnalysis = AIAnalysisData.fromJson(selectedResult['analysis']);
+              aiAnalysis = AIAnalysisData.fromJson(selectedResult);
             }
           }
         } else {
-          // Single item analysis
-          aiAnalysis = AIAnalysisData.fromJson(aiResult);
+          // Single item analysis - the response is already in the correct format
+          try {
+            aiAnalysis = AIAnalysisData.fromJson(aiResult);
+            print('AI Analysis created successfully: ${aiAnalysis?.clothingType}');
+          } catch (e) {
+            print('Error creating AIAnalysisData: $e');
+            print('AI Result keys: ${aiResult.keys.toList()}');
+          }
         }
       }
 
@@ -264,10 +275,18 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
       if (mounted) {
         Navigator.of(context).pop();
         
+        // Print detailed error for debugging
+        print('Error adding item to closet: $e');
+        print('Error type: ${e.runtimeType}');
+        if (e is TypeError) {
+          print('TypeError details: ${e.toString()}');
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error processing image: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

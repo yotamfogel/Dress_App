@@ -50,6 +50,7 @@ def initialize_models():
         color_analyzer = ColorAnalyzer()
         
         # Initialize Fashion Classification System
+        
         fashion_classifier = FashionClassificationSystem()
         
         logger.info("✅ All AI models initialized successfully!")

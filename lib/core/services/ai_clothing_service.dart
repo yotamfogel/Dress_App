@@ -11,7 +11,7 @@ class AIClothingService {
   /// Detect clothing items in an image
   static Future<List<ClothingItem>?> detectClothingItems(File imageFile) async {
     try {
-      final result = await AIBackendManager.detectClothing(imageFile);
+      final result = await AIBackendManager.analyzeFashion(imageFile);
       
       if (result != null && result['success'] == true) {
         final List<dynamic> items = result['items'] ?? [];
