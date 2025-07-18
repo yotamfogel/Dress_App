@@ -236,12 +236,13 @@ class ClosetDatabaseHelper {
 
     return await openDatabase(
       dbPathJoined,
-      version: 2, // Updated version for new schema
+      version: 3, // Updated version for new AI analysis schema
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE closet_items(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             imagePath TEXT NOT NULL,
+            aiAnalysis TEXT,
             clothingType TEXT,
             colors TEXT,
             patterns TEXT,
@@ -254,7 +255,7 @@ class ClosetDatabaseHelper {
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          // Add new columns for AI detection data
+          // Add columns for basic AI detection data
           await db.execute('ALTER TABLE closet_items ADD COLUMN clothingType TEXT');
           await db.execute('ALTER TABLE closet_items ADD COLUMN colors TEXT');
           await db.execute('ALTER TABLE closet_items ADD COLUMN patterns TEXT');
@@ -262,6 +263,10 @@ class ClosetDatabaseHelper {
           await db.execute('ALTER TABLE closet_items ADD COLUMN features TEXT');
           await db.execute('ALTER TABLE closet_items ADD COLUMN createdAt INTEGER');
           await db.execute('ALTER TABLE closet_items ADD COLUMN updatedAt INTEGER');
+        }
+        if (oldVersion < 3) {
+          // Add new AI analysis column
+          await db.execute('ALTER TABLE closet_items ADD COLUMN aiAnalysis TEXT');
         }
       },
     );
@@ -271,7 +276,8 @@ class ClosetDatabaseHelper {
     final db = await database;
     return await db.insert('closet_items', {
       'imagePath': item.imagePath,
-      'clothingType': item.clothingType,
+      'aiAnalysis': item.aiAnalysis != null ? jsonEncode(item.aiAnalysis!.toMap()) : null,
+      'clothingType': item.aiAnalysis?.clothingType,
       'colors': jsonEncode(item.colors.map((c) => c.toMap()).toList()),
       'patterns': jsonEncode(item.patterns),
       'confidence': item.confidence,
@@ -283,26 +289,47 @@ class ClosetDatabaseHelper {
 
   static Future<List<ClosetItemModel>> getAllItems() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('closet_items');
+    final List<Map<String, dynamic>> maps = await db.query('closet_items', orderBy: 'createdAt DESC');
     
     return List.generate(maps.length, (i) {
-      final map = maps[i];
-      return ClosetItemModel(
-        id: map['id'] as int?,
-        imagePath: map['imagePath'] as String,
-        clothingType: map['clothingType'] as String?,
-        colors: _parseColors(map['colors'] as String?),
-        patterns: _parsePatterns(map['patterns'] as String?),
-        confidence: (map['confidence'] as num?)?.toDouble() ?? 0.0,
-        features: _parseFeatures(map['features'] as String?),
-        createdAt: map['createdAt'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int)
-            : null,
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int)
-            : null,
-      );
+      return ClosetItemModel.fromMap(maps[i]);
     });
+  }
+
+  static Future<List<ClosetItemModel>> getFilteredItems({
+    List<String>? clothingTypes,
+    List<String>? styles,
+    List<String>? colors,
+  }) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('closet_items', orderBy: 'createdAt DESC');
+    
+    List<ClosetItemModel> items = List.generate(maps.length, (i) {
+      return ClosetItemModel.fromMap(maps[i]);
+    });
+
+    // Apply filters
+    if (clothingTypes != null && clothingTypes.isNotEmpty) {
+      items = items.where((item) => 
+          item.clothingType != null && 
+          clothingTypes.any((type) => 
+              item.clothingType!.toLowerCase().contains(type.toLowerCase()))).toList();
+    }
+
+    if (styles != null && styles.isNotEmpty) {
+      items = items.where((item) => 
+          item.applicableStyles.any((style) => 
+              styles.contains(style))).toList();
+    }
+
+    if (colors != null && colors.isNotEmpty) {
+      items = items.where((item) => 
+          item.colors.any((color) => 
+              colors.any((filterColor) => 
+                  color.name.toLowerCase().contains(filterColor.toLowerCase())))).toList();
+    }
+
+    return items;
   }
 
   static Future<int> updateItem(ClosetItemModel item) async {
@@ -311,7 +338,8 @@ class ClosetDatabaseHelper {
       'closet_items',
       {
         'imagePath': item.imagePath,
-        'clothingType': item.clothingType,
+        'aiAnalysis': item.aiAnalysis != null ? jsonEncode(item.aiAnalysis!.toMap()) : null,
+        'clothingType': item.aiAnalysis?.clothingType,
         'colors': jsonEncode(item.colors.map((c) => c.toMap()).toList()),
         'patterns': jsonEncode(item.patterns),
         'confidence': item.confidence,
@@ -330,6 +358,42 @@ class ClosetDatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  static Future<List<String>> getUniqueClothingTypes() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'closet_items',
+      columns: ['clothingType'],
+      distinct: true,
+      where: 'clothingType IS NOT NULL',
+    );
+    
+    return maps.map((map) => map['clothingType'] as String).toList();
+  }
+
+  static Future<List<String>> getUniqueColors() async {
+    final items = await getAllItems();
+    final Set<String> uniqueColors = {};
+    
+    for (final item in items) {
+      for (final color in item.colors) {
+        uniqueColors.add(color.name);
+      }
+    }
+    
+    return uniqueColors.toList()..sort();
+  }
+
+  static Future<List<String>> getUniqueStyles() async {
+    final items = await getAllItems();
+    final Set<String> uniqueStyles = {};
+    
+    for (final item in items) {
+      uniqueStyles.addAll(item.applicableStyles);
+    }
+    
+    return uniqueStyles.toList()..sort();
   }
 
   static List<ColorInfo> _parseColors(String? colorsJson) {
