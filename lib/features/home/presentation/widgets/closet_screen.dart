@@ -4,6 +4,7 @@ import '../../../../shared/presentation/widgets/settings_button.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../data/models/closet_item_model.dart';
+import '../../../../core/services/ai_backend_manager.dart';
 
 class MyClosetScreen extends ConsumerStatefulWidget {
   const MyClosetScreen({super.key});
@@ -14,7 +15,19 @@ class MyClosetScreen extends ConsumerStatefulWidget {
 
 class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
   List<ClosetItemModel> _items = [];
+  List<ClosetItemModel> _filteredItems = [];
   bool _loading = true;
+  
+  // Filter states
+  List<String> _selectedClothingTypes = [];
+  List<String> _selectedStyles = [];
+  List<String> _selectedColors = [];
+  bool _showFilters = false;
+  
+  // Available filter options
+  List<String> _availableClothingTypes = [];
+  List<String> _availableStyles = [];
+  List<String> _availableColors = [];
 
   @override
   void initState() {
@@ -26,8 +39,16 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
     setState(() => _loading = true);
     try {
       final items = await ClosetDatabaseHelper.getAllItems();
+      final clothingTypes = await ClosetDatabaseHelper.getUniqueClothingTypes();
+      final styles = await ClosetDatabaseHelper.getUniqueStyles();
+      final colors = await ClosetDatabaseHelper.getUniqueColors();
+      
       setState(() {
         _items = items;
+        _filteredItems = items;
+        _availableClothingTypes = clothingTypes;
+        _availableStyles = styles;
+        _availableColors = colors;
         _loading = false;
       });
     } catch (e) {
@@ -43,6 +64,48 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
     }
   }
 
+  void _applyFilters() {
+    setState(() {
+      _filteredItems = _items.where((item) {
+        // Filter by clothing type
+        if (_selectedClothingTypes.isNotEmpty) {
+          if (item.clothingType == null || 
+              !_selectedClothingTypes.any((type) => 
+                  item.clothingType!.toLowerCase().contains(type.toLowerCase()))) {
+            return false;
+          }
+        }
+        
+        // Filter by style
+        if (_selectedStyles.isNotEmpty) {
+          if (!item.applicableStyles.any((style) => _selectedStyles.contains(style))) {
+            return false;
+          }
+        }
+        
+        // Filter by color
+        if (_selectedColors.isNotEmpty) {
+          if (!item.colors.any((color) => 
+              _selectedColors.any((filterColor) => 
+                  color.name.toLowerCase().contains(filterColor.toLowerCase())))) {
+            return false;
+          }
+        }
+        
+        return true;
+      }).toList();
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedClothingTypes.clear();
+      _selectedStyles.clear();
+      _selectedColors.clear();
+      _filteredItems = _items;
+    });
+  }
+
   void _showAddItemDialog() {
     showDialog(
       context: context,
@@ -53,6 +116,11 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('Choose how you want to add an item to your closet'),
+              SizedBox(height: 8),
+              Text(
+                'AI analysis will automatically identify the clothing type, style, and colors.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
             ],
           ),
           actions: [
@@ -109,16 +177,66 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(width: 16),
-                Text('Adding item...'),
+                Expanded(
+                  child: Text('Analyzing clothing with AI...'),
+                ),
               ],
             ),
           );
         },
       );
 
-      // Create basic item without AI analysis
+      // Analyze image with AI
+      final aiResult = await AIBackendManager.analyzeFashion(File(imageFile.path));
+      
+      AIAnalysisData? aiAnalysis;
+      
+      if (aiResult != null && aiResult['success'] == true) {
+        if (aiResult['multiple_items'] == true) {
+          // Handle multiple items - show selection dialog
+          Navigator.of(context).pop(); // Close loading dialog
+          final selectedItem = await _showMultipleItemsDialog(aiResult['items']);
+          
+          if (selectedItem != null) {
+            // Show loading dialog again
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return const AlertDialog(
+                  content: Row(
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Text('Analyzing selected item...'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+            
+            // Analyze selected item
+            final selectedResult = await AIBackendManager.selectFashionItem(
+              File(imageFile.path), 
+              selectedItem
+            );
+            
+            if (selectedResult != null && selectedResult['success'] == true) {
+              aiAnalysis = AIAnalysisData.fromJson(selectedResult['analysis']);
+            }
+          }
+        } else {
+          // Single item analysis
+          aiAnalysis = AIAnalysisData.fromJson(aiResult);
+        }
+      }
+
+      // Create item with AI analysis
       final item = ClosetItemModel(
         imagePath: imageFile.path,
+        aiAnalysis: aiAnalysis,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -131,9 +249,13 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
         Navigator.of(context).pop();
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item added successfully!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              aiAnalysis != null 
+                  ? 'Item added with AI analysis!'
+                  : 'Item added (AI analysis failed)',
+            ),
+            backgroundColor: aiAnalysis != null ? Colors.green : Colors.orange,
           ),
         );
       }
@@ -150,6 +272,42 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
         );
       }
     }
+  }
+
+  Future<int?> _showMultipleItemsDialog(List<dynamic> items) async {
+    return showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Multiple Items Detected'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Please select which item to analyze:'),
+              const SizedBox(height: 12),
+              ...items.map<Widget>((item) {
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Text(item['id'].toString()),
+                  ),
+                  title: Text(item['description']),
+                  onTap: () {
+                    Navigator.of(context).pop(item['id']);
+                  },
+                );
+              }).toList(),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showItemDetails(ClosetItemModel item) {
