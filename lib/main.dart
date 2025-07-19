@@ -14,6 +14,7 @@ import 'features/auth/presentation/pages/email_signin_page.dart';
 import 'features/questions/presentation/pages/questions_page.dart';
 import 'features/preferences/presentation/pages/preferences_page.dart';
 import 'features/setup/presentation/pages/setup_page.dart';
+import 'features/settings/presentation/pages/settings_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -185,6 +186,24 @@ final _router = GoRouter(
               ),
               child: child,
             ),
+          );
+        },
+      ),
+    ),
+    GoRoute(
+      path: '/settings',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const SettingsPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Slide from right for settings
+          return SlideTransition(
+            position: animation.drive(
+              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero).chain(
+                CurveTween(curve: Curves.easeInOut),
+              ),
+            ),
+            child: child,
           );
         },
       ),

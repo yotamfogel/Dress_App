@@ -231,8 +231,8 @@ class FashionClassificationSystem:
         
         if self.yolo_model is not None:
             try:
-                # Run YOLO detection
-                results = self.yolo_model(image, conf=0.3, iou=0.5, verbose=False)
+                # Run YOLO detection with lower confidence threshold to catch more items
+                results = self.yolo_model(image, conf=0.2, iou=0.5, verbose=False)
                 
                 item_count = 0
                 for result in results:
@@ -243,8 +243,8 @@ class FashionClassificationSystem:
                             cls = int(box.cls)
                             class_name = self.yolo_model.names[cls]
                             
-                            # Filter for clothing items
-                            if self._is_clothing_item(class_name) and conf > 0.3:
+                            # Only include clothing-related items with reasonable confidence
+                            if self._is_clothing_item(class_name) and conf > 0.2:
                                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                                 
                                 # Skip very small detections
@@ -255,12 +255,58 @@ class FashionClassificationSystem:
                                 detected_items.append({
                                     'id': item_count,
                                     'label': class_name,
-                                    'confidence': conf,
+                                    'confidence': conf,  # Use real model confidence
                                     'bounding_box': {
                                         'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2,
                                         'width': x2 - x1, 'height': y2 - y1
                                     }
                                 })
+                
+                # If no specific clothing items detected, try to detect person and analyze regions
+                if not detected_items:
+                    person_results = self.yolo_model(image, conf=0.3, iou=0.5, verbose=False)
+                    for result in person_results:
+                        boxes = result.boxes
+                        if boxes is not None:
+                            for box in boxes:
+                                conf = float(box.conf)
+                                cls = int(box.cls)
+                                class_name = self.yolo_model.names[cls]
+                                
+                                if class_name.lower() == 'person' and conf > 0.3:
+                                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                                    height = y2 - y1
+                                    width = x2 - x1
+                                    
+                                    # Analyze different regions of the person for clothing
+                                    # Upper body region (shirt/top)
+                                    upper_y1 = y1
+                                    upper_y2 = y1 + int(height * 0.6)
+                                    item_count += 1
+                                    detected_items.append({
+                                        'id': item_count,
+                                        'label': 'shirt',
+                                        'confidence': conf * 0.8,  # Use person confidence as base
+                                        'bounding_box': {
+                                            'x1': x1, 'y1': upper_y1, 'x2': x2, 'y2': upper_y2,
+                                            'width': width, 'height': upper_y2 - upper_y1
+                                        }
+                                    })
+                                    
+                                    # Lower body region (pants/bottom)
+                                    lower_y1 = y1 + int(height * 0.4)
+                                    lower_y2 = y2
+                                    item_count += 1
+                                    detected_items.append({
+                                        'id': item_count,
+                                        'label': 'pants',
+                                        'confidence': conf * 0.7,  # Slightly lower for pants
+                                        'bounding_box': {
+                                            'x1': x1, 'y1': lower_y1, 'x2': x2, 'y2': lower_y2,
+                                            'width': width, 'height': lower_y2 - lower_y1
+                                        }
+                                    })
+                                    break  # Only process first person detected
                 
             except Exception as e:
                 logger.error(f"❌ YOLO detection error: {e}")
@@ -284,10 +330,16 @@ class FashionClassificationSystem:
             # Analyze colors
             colors = self._analyze_colors(item_region)
             
+            # Use the real model confidence
+            confidence = item['confidence']
+            
+            # Debug logging
+            logger.info(f"🔍 Item analysis - Label: {item['label']}, Confidence: {confidence:.3f}")
+            
             return {
                 'clothing_type': clothing_type,
                 'detected_as': item['label'],
-                'confidence': item['confidence'],
+                'confidence': confidence,
                 'applicable_styles': applicable_styles,
                 'colors': colors,
                 'color_description': self._generate_color_description(colors)
@@ -337,30 +389,49 @@ class FashionClassificationSystem:
         """Classify the detected label into our clothing type system"""
         detected_lower = detected_label.lower()
         
-        # Direct matching
+        # Direct matching with model labels
         for clothing_type, variations in self.clothing_types.items():
             if detected_lower in [v.lower() for v in variations]:
                 return clothing_type
         
-        # Fuzzy matching
+        # Fuzzy matching for model variations
         for clothing_type, variations in self.clothing_types.items():
             for variation in variations:
                 if variation.lower() in detected_lower or detected_lower in variation.lower():
                     return clothing_type
         
-        # Default classification based on common terms
-        if any(term in detected_lower for term in ['shirt', 'top', 'blouse']):
-            return 't-shirt'
-        elif any(term in detected_lower for term in ['pants', 'jeans', 'trouser']):
-            return 'jeans'
-        elif any(term in detected_lower for term in ['dress', 'gown']):
-            return 'dress'
-        elif any(term in detected_lower for term in ['shoe', 'boot', 'sneaker']):
-            return 'sneakers'
-        elif any(term in detected_lower for term in ['jacket', 'coat']):
-            return 'jacket'
+        # Handle common YOLO model labels
+        if detected_lower in ['person']:
+            return 'unknown'  # Person detection needs further analysis
+        elif detected_lower in ['tie', 'bow tie']:
+            return 'accessory'
+        elif detected_lower in ['handbag', 'backpack', 'purse']:
+            return 'bag'
+        elif detected_lower in ['umbrella']:
+            return 'accessory'
+        elif detected_lower in ['cell phone', 'laptop']:
+            return 'accessory'
         
-        return detected_label  # Return original if no match found
+        # Default classification based on common terms
+        if any(term in detected_lower for term in ['shirt', 'top', 'blouse', 'tee']):
+            return 't-shirt'
+        elif any(term in detected_lower for term in ['pants', 'jeans', 'trouser', 'slacks']):
+            return 'jeans'
+        elif any(term in detected_lower for term in ['dress', 'gown', 'frock']):
+            return 'dress'
+        elif any(term in detected_lower for term in ['shoe', 'boot', 'sneaker', 'footwear']):
+            return 'sneakers'
+        elif any(term in detected_lower for term in ['jacket', 'coat', 'blazer']):
+            return 'jacket'
+        elif any(term in detected_lower for term in ['hat', 'cap', 'beanie']):
+            return 'hat'
+        elif any(term in detected_lower for term in ['skirt']):
+            return 'skirt'
+        elif any(term in detected_lower for term in ['shorts']):
+            return 'shorts'
+        
+        # Return the original label if no classification found
+        return detected_label
     
     def _get_applicable_styles(self, clothing_type: str) -> List[str]:
         """Get applicable styles for a clothing type"""
@@ -491,8 +562,26 @@ class FashionClassificationSystem:
                 return "yellow"
             elif r > 100 and g > 50 and b < 50:
                 return "brown"
+            elif r > 150 and g < 100 and b > 150:
+                return "magenta"
+            elif r < 100 and g > 150 and b > 150:
+                return "cyan"
+            elif r > 150 and g < 150 and b < 150:
+                return "orange"
+            elif r < 150 and g > 150 and b < 150:
+                return "lime"
+            elif r < 150 and g < 150 and b > 150:
+                return "navy"
             else:
-                return "mixed"
+                # Instead of "mixed", return a more specific color based on dominant channel
+                if r > g and r > b:
+                    return "red"
+                elif g > r and g > b:
+                    return "green"
+                elif b > r and b > g:
+                    return "blue"
+                else:
+                    return "gray"
     
     def _generate_color_description(self, colors: List[Dict[str, Any]]) -> str:
         """Generate a human-readable color description"""
@@ -546,9 +635,18 @@ class FashionClassificationSystem:
             
             detailed_analysis = self._analyze_single_item(opencv_image, selected_item)
             
+            # Format the response to match what the Flutter app expects
             return {
                 'success': True,
-                'analysis': detailed_analysis
+                'clothing_type': detailed_analysis.get('clothing_type', 'unknown'),
+                'applicable_styles': detailed_analysis.get('applicable_styles', []),
+                'colors': detailed_analysis.get('colors', []),
+                'color_description': detailed_analysis.get('color_description', 'No colors detected'),
+                'detection_details': {
+                    'detected_as': detailed_analysis.get('detected_as', 'unknown'),
+                    'confidence': detailed_analysis.get('confidence', 0.0),
+                    'method': 'Fashion Classification System'
+                }
             }
             
         except Exception as e:

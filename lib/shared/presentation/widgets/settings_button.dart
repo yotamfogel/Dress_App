@@ -24,49 +24,21 @@ class SettingsButton extends ConsumerWidget {
         color: theme.colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: PopupMenuButton<String>(
-        onSelected: (value) async {
-          if (value == 'settings') {
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () {
             if (onSettingsTap != null) {
               onSettingsTap!();
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings - Coming Soon!')),
-              );
+              context.push('/settings');
             }
-          } else if (value == 'signout' && showSignOut) {
-            await ref.read(authProvider.notifier).signOut();
-            if (context.mounted) {
-              context.go('/onboarding');
-            }
-          }
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 'settings',
-            child: Row(
-              children: [
-                Icon(Icons.settings),
-                SizedBox(width: 8),
-                Text('Settings'),
-              ],
-            ),
+          },
+          child: Icon(
+            Icons.settings,
+            color: theme.colorScheme.onPrimaryContainer,
           ),
-          if (showSignOut)
-            const PopupMenuItem(
-              value: 'signout',
-              child: Row(
-                children: [
-                  Icon(Icons.logout),
-                  SizedBox(width: 8),
-                  Text('Sign Out'),
-                ],
-              ),
-            ),
-        ],
-        child: Icon(
-          Icons.settings,
-          color: theme.colorScheme.onPrimaryContainer,
         ),
       ),
     );

@@ -14,13 +14,20 @@ class ColorInfo {
   });
 
   factory ColorInfo.fromJson(Map<String, dynamic> json) {
+    print('ColorInfo.fromJson called with: $json');
+    final name = json['name'] ?? json['color'] ?? 'unknown';
+    final rgb = (json['rgb'] as List<dynamic>?)
+            ?.map((value) => value as int)
+            .toList() ??
+        [0, 0, 0];
+    final percentage = (json['percentage'] as num?)?.toDouble() ?? 0.0;
+    
+    print('  Parsed color: name=$name, rgb=$rgb, percentage=$percentage');
+    
     return ColorInfo(
-      name: json['name'] ?? json['color'] ?? 'unknown',
-      rgb: (json['rgb'] as List<dynamic>?)
-              ?.map((value) => value as int)
-              .toList() ??
-          [0, 0, 0],
-      percentage: (json['percentage'] as num?)?.toDouble() ?? 0.0,
+      name: name,
+      rgb: rgb,
+      percentage: percentage,
     );
   }
 
@@ -53,6 +60,8 @@ class AIAnalysisData {
   });
 
   factory AIAnalysisData.fromJson(Map<String, dynamic> json) {
+    print('AIAnalysisData.fromJson called with: $json');
+    
     // Handle applicable_styles which can be either a string or a list
     List<String> parseApplicableStyles(dynamic styles) {
       if (styles == null) return [];
@@ -69,16 +78,31 @@ class AIAnalysisData {
       return [];
     }
 
+    final clothingType = json['clothing_type'] as String?;
+    final applicableStyles = parseApplicableStyles(json['applicable_styles']);
+    final colors = (json['colors'] as List<dynamic>?)
+            ?.map((color) => ColorInfo.fromJson(color))
+            .toList() ??
+        [];
+    final colorDescription = json['color_description'] as String?;
+    final confidence = ((json['detection_details'] as Map<String, dynamic>?)?['confidence'] as num?)?.toDouble() ?? 0.0;
+    final detectionMethod = ((json['detection_details'] as Map<String, dynamic>?)?['method'] as String?) ?? 'Fashion Classification System';
+    
+    print('Parsed values:');
+    print('  clothingType: $clothingType');
+    print('  applicableStyles: $applicableStyles');
+    print('  colors: ${colors.length}');
+    print('  colorDescription: $colorDescription');
+    print('  confidence: $confidence');
+    print('  detectionMethod: $detectionMethod');
+
     return AIAnalysisData(
-      clothingType: json['clothing_type'] as String?,
-      applicableStyles: parseApplicableStyles(json['applicable_styles']),
-      colors: (json['colors'] as List<dynamic>?)
-              ?.map((color) => ColorInfo.fromJson(color))
-              .toList() ??
-          [],
-      colorDescription: json['color_description'] as String?,
-      confidence: ((json['detection_details'] as Map<String, dynamic>?)?['confidence'] as num?)?.toDouble() ?? 0.0,
-      detectionMethod: ((json['detection_details'] as Map<String, dynamic>?)?['method'] as String?) ?? 'Fashion Classification System',
+      clothingType: clothingType,
+      applicableStyles: applicableStyles,
+      colors: colors,
+      colorDescription: colorDescription,
+      confidence: confidence,
+      detectionMethod: detectionMethod,
       analyzedAt: DateTime.now(),
     );
   }

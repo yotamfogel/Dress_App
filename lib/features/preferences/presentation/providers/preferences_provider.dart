@@ -202,6 +202,29 @@ class PreferencesNotifier extends StateNotifier<PreferencesState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  Future<void> resetAllPreferences() async {
+    try {
+      // Clear all answers from storage
+      await _prefs.remove(_answersKey);
+      
+      // Reset questions to have no answers
+      final resetQuestions = state.questions.map((question) {
+        return question.copyWith(
+          userAnswer: null,
+          answeredAt: null,
+        );
+      }).toList();
+      
+      // Update state
+      state = state.copyWith(
+        questions: resetQuestions,
+        currentQuestionIndex: 0,
+      );
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
 }
 
 final preferencesProvider = StateNotifierProvider<PreferencesNotifier, PreferencesState>((ref) {

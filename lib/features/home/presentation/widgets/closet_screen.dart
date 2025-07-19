@@ -227,9 +227,18 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
             );
             
             print('Selected Result: $selectedResult');
+            print('Selected Result keys: ${selectedResult?.keys.toList()}');
             
             if (selectedResult != null && selectedResult['success'] == true) {
-              aiAnalysis = AIAnalysisData.fromJson(selectedResult);
+              try {
+                aiAnalysis = AIAnalysisData.fromJson(selectedResult);
+                print('AI Analysis created successfully from selected item: ${aiAnalysis?.clothingType}');
+                print('Colors found: ${aiAnalysis?.colors.length}');
+                print('Styles found: ${aiAnalysis?.applicableStyles.length}');
+              } catch (e) {
+                print('Error creating AIAnalysisData from selected item: $e');
+                print('Selected Result structure: $selectedResult');
+              }
             }
           }
         } else {
@@ -336,6 +345,9 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
         return Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -348,176 +360,178 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   child: Image.file(
                     File(item.imagePath),
-                    height: 300,
+                    height: 200,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
                 ),
                 
-                // Details section
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // AI Analysis Header
-                      if (item.aiAnalysis != null) ...[
-                        Row(
-                          children: [
-                            const Icon(Icons.psychology, color: Colors.purple, size: 20),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'AI Analysis',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      
-                      // Clothing type
-                      if (item.clothingType != null) ...[
-                        _buildAnalysisSection(
-                          'Clothing Type',
-                          item.clothingType!.toUpperCase(),
-                          Icons.checkroom,
-                          Colors.blue,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      
-                      // Applicable styles
-                      if (item.applicableStyles.isNotEmpty) ...[
-                        _buildAnalysisSection(
-                          'Applicable Styles',
-                          item.applicableStyles.join(', '),
-                          Icons.style,
-                          Colors.green,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      
-                      // Colors
-                      if (item.colors.isNotEmpty) ...[
-                        Row(
-                          children: [
-                            const Icon(Icons.palette, color: Colors.orange, size: 18),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Colors',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.orange,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: item.colors.map((color) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(
-                                  color.rgb[0],
-                                  color.rgb[1],
-                                  color.rgb[2],
-                                  1,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: Text(
-                                '${color.name} (${color.percentage.toStringAsFixed(1)}%)',
-                                style: TextStyle(
-                                  color: _getContrastColor(color.rgb),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      
-                      // Color description
-                      if (item.colorDescription != null) ...[
-                        _buildAnalysisSection(
-                          'Color Breakdown',
-                          item.colorDescription!,
-                          Icons.color_lens,
-                          Colors.pink,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      
-                      // AI Analysis metadata
-                      if (item.aiAnalysis != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                // Details section - make it scrollable
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // AI Analysis Header
+                        if (item.aiAnalysis != null) ...[
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.info, size: 16, color: Colors.grey),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'Analysis Details',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Confidence: ${(item.confidence * 100).toStringAsFixed(1)}%',
-                                style: const TextStyle(fontSize: 11, color: Colors.grey),
-                              ),
-                              Text(
-                                'Method: ${item.aiAnalysis!.detectionMethod}',
-                                style: const TextStyle(fontSize: 11, color: Colors.grey),
-                              ),
-                              if (item.aiAnalysis!.analyzedAt != null)
-                                Text(
-                                  'Analyzed: ${item.aiAnalysis!.analyzedAt!.toString().split(' ')[0]}',
-                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              const Icon(Icons.psychology, color: Colors.purple, size: 20),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'AI Analysis',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.purple,
                                 ),
+                              ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      
-                      // Date added
-                      if (item.createdAt != null) ...[
-                        Text(
-                          'Added: ${item.createdAt!.toString().split(' ')[0]}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                          const SizedBox(height: 12),
+                        ],
+                        
+                        // Clothing type
+                        if (item.clothingType != null) ...[
+                          _buildAnalysisSection(
+                            'Clothing Type',
+                            item.clothingType!.toUpperCase(),
+                            Icons.checkroom,
+                            Colors.blue,
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                        ],
+                        
+                        // Applicable styles
+                        if (item.applicableStyles.isNotEmpty) ...[
+                          _buildAnalysisSection(
+                            'Applicable Styles',
+                            item.applicableStyles.join(', '),
+                            Icons.style,
+                            Colors.green,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        
+                        // Colors
+                        if (item.colors.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              const Icon(Icons.palette, color: Colors.orange, size: 18),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Colors',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: item.colors.map((color) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color.fromRGBO(
+                                    color.rgb[0],
+                                    color.rgb[1],
+                                    color.rgb[2],
+                                    1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.grey.shade300),
+                                ),
+                                child: Text(
+                                  '${color.name} (${color.percentage.toStringAsFixed(1)}%)',
+                                  style: TextStyle(
+                                    color: _getContrastColor(color.rgb),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        
+                        // Color description
+                        if (item.colorDescription != null) ...[
+                          _buildAnalysisSection(
+                            'Color Breakdown',
+                            item.colorDescription!,
+                            Icons.color_lens,
+                            Colors.pink,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        
+                        // AI Analysis metadata
+                        if (item.aiAnalysis != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.info, size: 16, color: Colors.grey),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Analysis Details',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Confidence: ${(item.confidence * 100).toStringAsFixed(1)}%',
+                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                ),
+                                Text(
+                                  'Method: ${item.aiAnalysis!.detectionMethod}',
+                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                ),
+                                if (item.aiAnalysis!.analyzedAt != null)
+                                  Text(
+                                    'Analyzed: ${item.aiAnalysis!.analyzedAt!.toString().split(' ')[0]}',
+                                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        
+                        // Date added
+                        if (item.createdAt != null) ...[
+                          Text(
+                            'Added: ${item.createdAt!.toString().split(' ')[0]}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
                 
@@ -1003,21 +1017,22 @@ class _MyClosetScreenState extends ConsumerState<MyClosetScreen> {
                                   ),
                                 ),
                       
-                      const SizedBox(height: 16),
-                      
                       // Add Item Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _showAddItemDialog,
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Item to Closet'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFEFAD4),
-                            foregroundColor: const Color(0xFF461700),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _showAddItemDialog,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add Item to Closet'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFEFAD4),
+                              foregroundColor: const Color(0xFF461700),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),

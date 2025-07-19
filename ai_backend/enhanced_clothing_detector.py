@@ -147,7 +147,8 @@ class EnhancedClothingDetector:
             logger.info("✅ Mask R-CNN initialized successfully!")
             
         except Exception as e:
-            logger.error(f"❌ Error setting up Mask R-CNN: {e}")
+            import traceback
+            logger.error(f"❌ Error setting up Mask R-CNN: {e}\n" + traceback.format_exc())
             self.mask_rcnn_predictor = None
     
     def _setup_mmfashion(self):
@@ -277,6 +278,8 @@ class EnhancedClothingDetector:
             results = self.fallback_model(opencv_image, conf=0.3, iou=0.5, verbose=False)
             
             detections = []
+            person_detections = []
+            
             for result in results:
                 boxes = result.boxes
                 if boxes is not None:
@@ -285,29 +288,79 @@ class EnhancedClothingDetector:
                         cls = int(box.cls)
                         class_name = self.fallback_model.names[cls]
                         
-                        # Filter for fashion items
-                        if not self._is_fashion_item(class_name):
-                            continue
-                        
                         # Get bounding box
                         x1, y1, x2, y2 = map(int, box.xyxy[0])
                         
-                        # Extract region for color analysis
-                        region = opencv_image[y1:y2, x1:x2]
-                        colors = self._analyze_region_colors(region)
-                        
-                        detection = {
-                            'label': class_name,
-                            'confidence': conf,
+                        # Separate person detections from clothing detections
+                        if class_name.lower() == 'person' and conf > 0.3:
+                            person_detections.append({
+                                'box': (x1, y1, x2, y2),
+                                'confidence': conf
+                            })
+                        elif class_name.lower() != 'person' and self._is_fashion_item(class_name):
+                            # Extract region for color analysis
+                            region = opencv_image[y1:y2, x1:x2]
+                            colors = self._analyze_region_colors(region)
+                            
+                            detection = {
+                                'label': class_name,
+                                'confidence': conf,
+                                'bounding_box': {
+                                    'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2,
+                                    'width': x2 - x1, 'height': y2 - y1
+                                },
+                                'colors': colors,
+                                'attributes': self._get_basic_attributes(class_name),
+                                'segmentation_available': False
+                            }
+                            detections.append(detection)
+            
+            # If no specific clothing items detected but person detected, analyze person regions
+            if not detections and person_detections:
+                for person in person_detections:
+                    x1, y1, x2, y2 = person['box']
+                    
+                    # Analyze different regions of the person for clothing
+                    height = y2 - y1
+                    width = x2 - x1
+                    
+                    # Upper body region (shirt/top)
+                    upper_y1 = y1
+                    upper_y2 = y1 + int(height * 0.6)
+                    upper_region = opencv_image[upper_y1:upper_y2, x1:x2]
+                    upper_colors = self._analyze_region_colors(upper_region)
+                    
+                    if upper_colors:
+                        detections.append({
+                            'label': 'shirt',  # Default to shirt for upper body
+                            'confidence': person['confidence'] * 0.8,  # Slightly lower confidence
                             'bounding_box': {
-                                'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2,
-                                'width': x2 - x1, 'height': y2 - y1
+                                'x1': x1, 'y1': upper_y1, 'x2': x2, 'y2': upper_y2,
+                                'width': width, 'height': upper_y2 - upper_y1
                             },
-                            'colors': colors,
-                            'attributes': self._get_basic_attributes(class_name),
+                            'colors': upper_colors,
+                            'attributes': self._get_basic_attributes('shirt'),
                             'segmentation_available': False
-                        }
-                        detections.append(detection)
+                        })
+                    
+                    # Lower body region (pants/bottom)
+                    lower_y1 = y1 + int(height * 0.4)
+                    lower_y2 = y2
+                    lower_region = opencv_image[lower_y1:lower_y2, x1:x2]
+                    lower_colors = self._analyze_region_colors(lower_region)
+                    
+                    if lower_colors:
+                        detections.append({
+                            'label': 'pants',  # Default to pants for lower body
+                            'confidence': person['confidence'] * 0.8,  # Slightly lower confidence
+                            'bounding_box': {
+                                'x1': x1, 'y1': lower_y1, 'x2': x2, 'y2': lower_y2,
+                                'width': width, 'height': lower_y2 - lower_y1
+                            },
+                            'colors': lower_colors,
+                            'attributes': self._get_basic_attributes('pants'),
+                            'segmentation_available': False
+                        })
             
             return detections
             
@@ -717,5 +770,25 @@ class EnhancedClothingDetector:
                 return "green"
             elif b > r and b > g:
                 return "blue"
+            elif r > 150 and g > 150 and b < 100:
+                return "yellow"
+            elif r > 150 and g < 100 and b > 150:
+                return "magenta"
+            elif r < 100 and g > 150 and b > 150:
+                return "cyan"
+            elif r > 150 and g < 150 and b < 150:
+                return "orange"
+            elif r < 150 and g > 150 and b < 150:
+                return "lime"
+            elif r < 150 and g < 150 and b > 150:
+                return "navy"
             else:
-                return "mixed"
+                # Instead of "mixed", return a more specific color based on dominant channel
+                if r > g and r > b:
+                    return "red"
+                elif g > r and g > b:
+                    return "green"
+                elif b > r and b > g:
+                    return "blue"
+                else:
+                    return "gray"

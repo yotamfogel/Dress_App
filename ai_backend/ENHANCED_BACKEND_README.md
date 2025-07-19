@@ -243,3 +243,70 @@ result = response.json()
 - MMFashion (for advanced attribute detection)
 
 The backend is fully functional and ready for use with the Flutter app. The advanced features will become available automatically once the installation completes.
+
+# Enhanced AI Backend - Ubuntu/WSL Installation Guide
+
+## 1. Install Miniconda (if not already installed)
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+# Follow prompts, then:
+source ~/.bashrc
+conda init
+# Restart your terminal
+```
+
+## 2. Create and Activate Conda Environment
+```bash
+conda create -n dressapp-ai python=3.10 -y
+conda activate dressapp-ai
+```
+
+## 3. Install PyTorch (CPU-only or with CUDA)
+- **CPU-only:**
+```bash
+pip install torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cpu
+```
+- **With CUDA (if you have a GPU and CUDA is set up):**
+  - Find the right command at https://pytorch.org/get-started/locally/
+
+## 4. Install mmcv and mmdet
+- **If you get CUDA errors, set CUDA_HOME to empty:**
+```bash
+CUDA_HOME="" pip install mmcv
+CUDA_HOME="" pip install mmdet==2.28.2
+```
+
+## 5. Install Detectron2 (CPU-only or with CUDA)
+- **CPU-only:**
+```bash
+CUDA_HOME="" pip install 'git+https://github.com/facebookresearch/detectron2.git'
+```
+- **With CUDA:**
+  - See https://detectron2.readthedocs.io/en/latest/tutorials/install.html for the right command for your CUDA version.
+
+## 6. Install Other Python Dependencies
+```bash
+pip install flask flask-cors numpy opencv-python pillow scikit-learn webcolors ultralytics
+```
+
+## 7. Run the Enhanced Server
+```bash
+cd /mnt/c/dev/dressapp/ai_backend  # Or wherever your code is
+conda activate dressapp-ai
+python3 start_enhanced_server.py
+```
+
+## 8. Troubleshooting
+- If you see `OSError: CUDA_HOME environment variable is not set`, always prepend `CUDA_HOME=""` to your pip install command.
+- If you get `No module named ...`, install the missing package with pip.
+- If you want to use GPU, make sure `nvidia-smi` works in WSL and CUDA is installed in Ubuntu.
+- If you want to move your code to WSL home for better performance:
+```bash
+cp -r /mnt/c/dev/dressapp/ai_backend ~/  # Copy to WSL home
+tree ~/ai_backend  # Check files
+```
+
+---
+
+**This guide ensures all dependencies for the enhanced AI backend are installed and ready to use in Ubuntu/WSL.**
